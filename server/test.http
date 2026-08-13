@@ -1,0 +1,12 @@
+POST http://localhost:4000/api/vehicles
+Content-Type: application/json
+
+{
+  "year": 2023,
+  "make": "Nissan",
+  "model": "Altima",
+  "trim": "SV",
+  "vin": "1N4BL4DV5PN123456",
+  "licensePlate": "ABC1234",
+  "currentMileage": 18500
+}
