@@ -31,8 +31,13 @@ function App() {
   const [maintenanceRecords, setMaintenanceRecords] = useState<
     MaintenanceRecord[]
   >([]);
+  
+  const [allMaintenanceRecords, setAllMaintenanceRecords] = useState<
+  MaintenanceRecord[]
+>([]);
 
   const [serviceType, setServiceType] = useState("");
+  const [customServiceType, setCustomServiceType] = useState("");
   const [serviceDate, setServiceDate] = useState("");
   const [maintenanceMileage, setMaintenanceMileage] = useState("");
   const [cost, setCost] = useState("");
@@ -41,6 +46,9 @@ function App() {
 
   const [editingMaintenanceId, setEditingMaintenanceId] =
     useState<string | null>(null);
+
+  const [nextServiceDate, setNextServiceDate] = useState("");
+const [nextServiceMileage, setNextServiceMileage] = useState("");
 
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     totalVehicles: 0,
@@ -63,7 +71,17 @@ function App() {
   useEffect(() => {
     loadVehicles();
     loadDashboard();
+    loadAllMaintenance();
   }, []);
+
+  async function loadAllMaintenance() {
+  const response = await fetch(
+    "http://localhost:4000/api/maintenance"
+  );
+
+  const data = await response.json();
+  setAllMaintenanceRecords(data);
+}
 
   async function addVehicle(event: FormEvent) {
     event.preventDefault();
@@ -189,43 +207,54 @@ function App() {
   }
 
   async function addMaintenance(event: FormEvent) {
-    event.preventDefault();
+  event.preventDefault();
 
-    if (!selectedVehicleId) return;
+  if (!selectedVehicleId) return;
 
-    const response = await fetch(
-      `http://localhost:4000/api/vehicles/${selectedVehicleId}/maintenance`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          serviceType,
-          serviceDate,
-          mileage: maintenanceMileage,
-          cost,
-          shop,
-          notes,
-        }),
-      }
-    );
+  const finalServiceType =
+    serviceType === "Custom Service"
+      ? customServiceType
+      : serviceType;
 
-    if (!response.ok) {
-      alert("Unable to save maintenance record.");
-      return;
+  const response = await fetch(
+    `http://localhost:4000/api/vehicles/${selectedVehicleId}/maintenance`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        serviceType: finalServiceType,
+        serviceDate,
+        mileage: maintenanceMileage,
+        cost,
+        shop,
+        notes,
+        nextServiceDate,
+        nextServiceMileage,
+      }),
     }
+  );
 
-    setServiceType("");
-    setServiceDate("");
-    setMaintenanceMileage("");
-    setCost("");
-    setShop("");
-    setNotes("");
-
-    await loadMaintenance(selectedVehicleId);
-    await loadDashboard();
+  if (!response.ok) {
+    alert("Unable to save maintenance record.");
+    return;
   }
+
+  setServiceType("");
+  setCustomServiceType("");
+  setServiceDate("");
+  setMaintenanceMileage("");
+  setCost("");
+  setShop("");
+  setNotes("");
+  setNextServiceDate("");
+  setNextServiceMileage("");
+
+  await loadMaintenance(selectedVehicleId);
+  await loadDashboard();
+  await loadAllMaintenance();
+}
 
   async function deleteMaintenance(id: string) {
     const confirmed = window.confirm(
@@ -251,57 +280,80 @@ function App() {
     }
 
     await loadDashboard();
+    await loadAllMaintenance();
   }
 
   function startMaintenanceEdit(record: MaintenanceRecord) {
-    setEditingMaintenanceId(record.id);
-    setServiceType(record.serviceType);
-    setServiceDate(record.serviceDate.slice(0, 10));
-    setMaintenanceMileage(record.mileage.toString());
-    setCost(record.cost?.toString() || "");
-    setShop(record.shop || "");
-    setNotes(record.notes || "");
-  }
+  setEditingMaintenanceId(record.id);
+  setServiceType(record.serviceType);
+  setServiceDate(record.serviceDate.slice(0, 10));
+  setMaintenanceMileage(record.mileage.toString());
+  setCost(record.cost?.toString() || "");
+  setShop(record.shop || "");
+  setNotes(record.notes || "");
+  setCustomServiceType("");
+
+  setNextServiceDate(
+    record.nextServiceDate
+      ? record.nextServiceDate.slice(0, 10)
+      : ""
+  );
+
+  setNextServiceMileage(
+    record.nextServiceMileage?.toString() || ""
+  );
+}
 
   async function updateMaintenance(event: FormEvent) {
-    event.preventDefault();
+  event.preventDefault();
 
-    if (!editingMaintenanceId || !selectedVehicleId) return;
+  if (!editingMaintenanceId || !selectedVehicleId) return;
 
-    const response = await fetch(
-      `http://localhost:4000/api/maintenance/${editingMaintenanceId}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          serviceType,
-          serviceDate,
-          mileage: maintenanceMileage,
-          cost,
-          shop,
-          notes,
-        }),
-      }
-    );
+  const finalServiceType =
+    serviceType === "Custom Service"
+      ? customServiceType
+      : serviceType;
 
-    if (!response.ok) {
-      alert("Unable to update maintenance record.");
-      return;
+  const response = await fetch(
+    `http://localhost:4000/api/maintenance/${editingMaintenanceId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        serviceType: finalServiceType,
+        serviceDate,
+        mileage: maintenanceMileage,
+        cost,
+        shop,
+        notes,
+        nextServiceDate,
+        nextServiceMileage,
+      }),
     }
+  );
 
-    setEditingMaintenanceId(null);
-    setServiceType("");
-    setServiceDate("");
-    setMaintenanceMileage("");
-    setCost("");
-    setShop("");
-    setNotes("");
-
-    await loadMaintenance(selectedVehicleId);
-    await loadDashboard();
+  if (!response.ok) {
+    alert("Unable to update maintenance record.");
+    return;
   }
+
+  setEditingMaintenanceId(null);
+  setServiceType("");
+  setCustomServiceType("");
+  setServiceDate("");
+  setMaintenanceMileage("");
+  setCost("");
+  setShop("");
+  setNotes("");
+  setNextServiceDate("");
+  setNextServiceMileage("");
+
+  await loadMaintenance(selectedVehicleId);
+  await loadDashboard();
+  await loadAllMaintenance();
+}
 
   return (
     <div className="container">
@@ -311,6 +363,8 @@ function App() {
         totalVehicles={dashboardStats.totalVehicles}
         totalMaintenance={dashboardStats.totalMaintenance}
         totalCost={dashboardStats.totalCost}
+        vehicles={vehicles}
+        maintenanceRecords={allMaintenanceRecords}
       />
 
       <VehicleForm
@@ -356,29 +410,35 @@ function App() {
       )}
 
       {selectedVehicleId && (
-        <MaintenanceSection
-          maintenanceRecords={maintenanceRecords}
-          serviceType={serviceType}
-          serviceDate={serviceDate}
-          maintenanceMileage={maintenanceMileage}
-          cost={cost}
-          shop={shop}
-          notes={notes}
-          setServiceType={setServiceType}
-          setServiceDate={setServiceDate}
-          setMaintenanceMileage={setMaintenanceMileage}
-          setCost={setCost}
-          setShop={setShop}
-          setNotes={setNotes}
-          editingMaintenanceId={editingMaintenanceId}
-          onSubmit={
-            editingMaintenanceId
-              ? updateMaintenance
-              : addMaintenance
-          }
-          onEdit={startMaintenanceEdit}
-          onDelete={deleteMaintenance}
-        />
+      <MaintenanceSection
+  maintenanceRecords={maintenanceRecords}
+  serviceType={serviceType}
+  serviceDate={serviceDate}
+  maintenanceMileage={maintenanceMileage}
+  cost={cost}
+  shop={shop}
+  notes={notes}
+  nextServiceDate={nextServiceDate}
+  nextServiceMileage={nextServiceMileage}
+  setServiceType={setServiceType}
+  setServiceDate={setServiceDate}
+  customServiceType={customServiceType}
+  setCustomServiceType={setCustomServiceType}
+  setMaintenanceMileage={setMaintenanceMileage}
+  setCost={setCost}
+  setShop={setShop}
+  setNotes={setNotes}
+  setNextServiceDate={setNextServiceDate}
+  setNextServiceMileage={setNextServiceMileage}
+  editingMaintenanceId={editingMaintenanceId}
+  onSubmit={
+    editingMaintenanceId
+      ? updateMaintenance
+      : addMaintenance
+  }
+  onEdit={startMaintenanceEdit}
+  onDelete={deleteMaintenance}
+/>  
       )}
     </div>
   );

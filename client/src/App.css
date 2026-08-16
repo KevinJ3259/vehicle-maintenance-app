@@ -78,3 +78,27 @@ button:hover {
 .secondary-btn:hover {
   background: #4b5563;
 }
+
+.maintenance-status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.maintenance-status.overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.maintenance-status.due-soon {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.maintenance-status.upcoming {
+  background: #dcfce7;
+  color: #15803d;
+}

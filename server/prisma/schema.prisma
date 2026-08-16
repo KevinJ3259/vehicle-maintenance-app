@@ -30,6 +30,9 @@ model MaintenanceRecord {
   cost        Float?
   shop        String?
   notes       String?
+  nextServiceDate    DateTime?
+  nextServiceMileage Int?
+
 
   vehicleId String
   vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)

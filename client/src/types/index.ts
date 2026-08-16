@@ -13,8 +13,12 @@ export type MaintenanceRecord = {
   serviceType: string;
   serviceDate: string;
   mileage: number;
-  cost?: number;
-  shop?: string;
-  notes?: string;
+  cost: number | null;
+  shop: string | null;
+  notes: string | null;
+  nextServiceDate: string | null;
+  nextServiceMileage: number | null;
   vehicleId: string;
+  createdAt: string;
+  updatedAt: string;
 };

@@ -161,6 +161,8 @@ app.post(
         cost,
         shop,
         notes,
+        nextServiceDate,
+  nextServiceMileage,
       } = req.body;
 
       const record = await prisma.maintenanceRecord.create({
@@ -175,6 +177,13 @@ app.post(
               : Number(cost),
           shop: shop || null,
           notes: notes || null,
+          nextServiceDate: nextServiceDate 
+            ? new Date(nextServiceDate) 
+            : null,
+          nextServiceMileage: 
+            nextServiceMileage === "" || nextServiceMileage === undefined
+              ? null
+              : Number(nextServiceMileage),
         },
       });
 
@@ -246,6 +255,8 @@ app.patch("/api/maintenance/:id", async (req, res) => {
       cost,
       shop,
       notes,
+      nextServiceDate,
+  nextServiceMileage
     } = req.body;
 
     const record = await prisma.maintenanceRecord.update({
@@ -260,6 +271,13 @@ app.patch("/api/maintenance/:id", async (req, res) => {
             : Number(cost),
         shop: shop || null,
         notes: notes || null,
+        nextServiceDate: nextServiceDate 
+          ? new Date(nextServiceDate) 
+          : null,
+        nextServiceMileage: 
+          nextServiceMileage === "" || nextServiceMileage === undefined
+            ? null
+            : Number(nextServiceMileage),
       },
     });
 
@@ -269,6 +287,25 @@ app.patch("/api/maintenance/:id", async (req, res) => {
 
     res.status(500).json({
       message: "Unable to update maintenance record",
+    });
+  }
+});
+
+// Get all maintenance records for dashboard reminders
+app.get("/api/maintenance", async (_req, res) => {
+  try {
+    const records = await prisma.maintenanceRecord.findMany({
+      orderBy: {
+        serviceDate: "desc",
+      },
+    });
+
+    res.json(records);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Unable to load maintenance records",
     });
   }
 });
