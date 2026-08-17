@@ -187,6 +187,24 @@ app.post(
         },
       });
 
+      const vehicle = await prisma.vehicle.findUnique({
+  where: { id: vehicleId },
+});
+
+const maintenanceMileage = Number(mileage);
+
+if (
+  vehicle &&
+  maintenanceMileage > vehicle.currentMileage
+) {
+  await prisma.vehicle.update({
+    where: { id: vehicleId },
+    data: {
+      currentMileage: maintenanceMileage,
+    },
+  });
+}    
+
       res.status(201).json(record);
     } catch (error) {
       console.error(error);
@@ -280,6 +298,24 @@ app.patch("/api/maintenance/:id", async (req, res) => {
             : Number(nextServiceMileage),
       },
     });
+
+    const vehicle = await prisma.vehicle.findUnique({
+  where: { id: record.vehicleId },
+});
+
+const editedMaintenanceMileage = Number(mileage);
+
+if (
+  vehicle &&
+  editedMaintenanceMileage > vehicle.currentMileage
+) {
+  await prisma.vehicle.update({
+    where: { id: record.vehicleId },
+    data: {
+      currentMileage: editedMaintenanceMileage,
+    },
+  });
+}
 
     res.json(record);
   } catch (error) {

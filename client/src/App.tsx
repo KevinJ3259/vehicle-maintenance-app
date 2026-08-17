@@ -252,6 +252,7 @@ const [nextServiceMileage, setNextServiceMileage] = useState("");
   setNextServiceMileage("");
 
   await loadMaintenance(selectedVehicleId);
+  await loadVehicles();
   await loadDashboard();
   await loadAllMaintenance();
 }
@@ -351,8 +352,23 @@ const [nextServiceMileage, setNextServiceMileage] = useState("");
   setNextServiceMileage("");
 
   await loadMaintenance(selectedVehicleId);
+  await loadVehicles();
   await loadDashboard();
   await loadAllMaintenance();
+}
+
+// ADD THE NEW FUNCTION HERE
+function cancelMaintenanceEdit() {
+  setEditingMaintenanceId(null);
+  setServiceType("");
+  setCustomServiceType("");
+  setServiceDate("");
+  setMaintenanceMileage("");
+  setCost("");
+  setShop("");
+  setNotes("");
+  setNextServiceDate("");
+  setNextServiceMileage("");
 }
 
   return (
@@ -438,6 +454,7 @@ const [nextServiceMileage, setNextServiceMileage] = useState("");
   }
   onEdit={startMaintenanceEdit}
   onDelete={deleteMaintenance}
+  onCancelEdit={cancelMaintenanceEdit}
 />  
       )}
     </div>

@@ -20,21 +20,27 @@ export default function Dashboard({
 
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  function getMaintenanceStatus(
+ function getMaintenanceStatus(
   milesRemaining: number | null,
   daysRemaining: number | null
 ) {
-  if (
-    (milesRemaining !== null && milesRemaining <= 0) ||
-    (daysRemaining !== null && daysRemaining <= 0)
-  ) {
+  const overdueByMileage =
+    milesRemaining !== null && milesRemaining <= 0;
+
+  const overdueByDate =
+    daysRemaining !== null && daysRemaining <= 0;
+
+  if (overdueByMileage || overdueByDate) {
     return "OVERDUE";
   }
 
-  if (
-    (milesRemaining !== null && milesRemaining <= 500) ||
-    (daysRemaining !== null && daysRemaining <= 14)
-  ) {
+  const dueSoonByMileage =
+    milesRemaining !== null && milesRemaining <= 1000;
+
+  const dueSoonByDate =
+    daysRemaining !== null && daysRemaining <= 30;
+
+  if (dueSoonByMileage || dueSoonByDate) {
     return "DUE SOON";
   }
 

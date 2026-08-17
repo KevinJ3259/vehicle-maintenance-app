@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { FormEvent } from "react";
 import type { MaintenanceRecord } from "../types";
 
@@ -13,7 +14,6 @@ type MaintenanceSectionProps = {
   notes: string;
   nextServiceDate: string;
   nextServiceMileage: string;
-  
 
   setServiceType: (value: string) => void;
   setCustomServiceType: (value: string) => void;
@@ -30,6 +30,7 @@ type MaintenanceSectionProps = {
   onSubmit: (event: FormEvent) => void;
   onEdit: (record: MaintenanceRecord) => void;
   onDelete: (id: string) => void;
+  onCancelEdit: () => void;
 };
 
 export default function MaintenanceSection({
@@ -56,7 +57,11 @@ export default function MaintenanceSection({
   onSubmit,
   onEdit,
   onDelete,
+  onCancelEdit,
 }: MaintenanceSectionProps) {
+  const [sortBy, setSortBy] = useState("newest");
+  const [searchTerm, setSearchTerm] = useState("");
+
   function applyServiceSuggestion(value: string) {
     setServiceType(value);
 
@@ -108,50 +113,97 @@ export default function MaintenanceSection({
     setNextServiceDate(`${year}-${month}-${day}`);
   }
 
+  const filteredAndSortedMaintenanceRecords = [...maintenanceRecords]
+  .filter((record) =>
+    record.serviceType
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  )
+  .sort((a, b) => {
+    switch (sortBy) {
+      case "oldest":
+        return (
+          new Date(a.serviceDate).getTime() -
+          new Date(b.serviceDate).getTime()
+        );
+
+      case "mileage":
+        return b.mileage - a.mileage;
+
+      case "cost":
+        return (b.cost ?? 0) - (a.cost ?? 0);
+
+      case "newest":
+      default:
+        return (
+          new Date(b.serviceDate).getTime() -
+          new Date(a.serviceDate).getTime()
+        );
+    }
+  });
+
   return (
     <div className="card">
       <h2>Maintenance Records</h2>
 
       <form onSubmit={onSubmit} className="maintenance-form">
-      <select
-  required
-  value={serviceType}
-  onChange={(e) =>
-    applyServiceSuggestion(e.target.value)
-  }
->
-  <option value="">Select Service Type</option>
-  <option value="Oil Change">Oil Change</option>
-  <option value="Tire Rotation">Tire Rotation</option>
-  <option value="Brake Inspection">Brake Inspection</option>
-  <option value="Brake Service">Brake Service</option>
-  <option value="Air Filter">Air Filter</option>
-  <option value="Cabin Air Filter">Cabin Air Filter</option>
-  <option value="Transmission Fluid">Transmission Fluid</option>
-  <option value="Coolant Service">Coolant Service</option>
-  <option value="Spark Plugs">Spark Plugs</option>
-  <option value="Battery Replacement">Battery Replacement</option>
-  <option value="Tire Replacement">Tire Replacement</option>
-  <option value="Wheel Alignment">Wheel Alignment</option>
-  <option value="Custom Service">Custom Service</option>
-</select>
+        <select
+          required
+          value={serviceType}
+          onChange={(e) =>
+            applyServiceSuggestion(e.target.value)
+          }
+        >
+          <option value="">Select Service Type</option>
+          <option value="Oil Change">Oil Change</option>
+          <option value="Tire Rotation">Tire Rotation</option>
+          <option value="Brake Inspection">
+            Brake Inspection
+          </option>
+          <option value="Brake Service">Brake Service</option>
+          <option value="Air Filter">Air Filter</option>
+          <option value="Cabin Air Filter">
+            Cabin Air Filter
+          </option>
+          <option value="Transmission Fluid">
+            Transmission Fluid
+          </option>
+          <option value="Coolant Service">
+            Coolant Service
+          </option>
+          <option value="Spark Plugs">Spark Plugs</option>
+          <option value="Battery Replacement">
+            Battery Replacement
+          </option>
+          <option value="Tire Replacement">
+            Tire Replacement
+          </option>
+          <option value="Wheel Alignment">
+            Wheel Alignment
+          </option>
+          <option value="Custom Service">
+            Custom Service
+          </option>
+        </select>
 
-{serviceType === "Custom Service" && (
-  <input
-    required
-    placeholder="Enter Custom Service"
-    value={customServiceType}
-    onChange={(e) =>
-      setCustomServiceType(e.target.value)
-    }
-  />
-)}
+        {serviceType === "Custom Service" && (
+          <input
+            required
+            placeholder="Enter Custom Service"
+            value={customServiceType}
+            onChange={(e) =>
+              setCustomServiceType(e.target.value)
+            }
+          />
+        )}
 
         <input
           required
           type="date"
           value={serviceDate}
-          onChange={(e) => setServiceDate(e.target.value)}
+          onChange={(e) =>
+            setServiceDate(e.target.value)
+          }
         />
 
         <input
@@ -206,13 +258,48 @@ export default function MaintenanceSection({
             ? "Save Changes"
             : "Save Maintenance"}
         </button>
+
+        {editingMaintenanceId && (
+          <button
+            type="button"
+            onClick={onCancelEdit}
+          >
+            Cancel Edit
+          </button>
+        )}
       </form>
 
+      <div className="maintenance-search">
+  <input
+    type="text"
+    placeholder="Search maintenance..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+  />
+</div>
+
+      <div className="maintenance-sort">
+        <label htmlFor="maintenance-sort">
+          Sort Maintenance:
+        </label>
+
+        <select
+          id="maintenance-sort"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+        >
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="mileage">Highest Mileage</option>
+          <option value="cost">Highest Cost</option>
+        </select>
+      </div>
+
       <div className="maintenance-list">
-        {maintenanceRecords.length === 0 ? (
+        {filteredAndSortedMaintenanceRecords.length === 0 ? (
           <p>No maintenance records yet.</p>
         ) : (
-          maintenanceRecords.map((record) => (
+          filteredAndSortedMaintenanceRecords.map((record) => (
             <div
               key={record.id}
               className="maintenance-record"
