@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { FormEvent } from "react";
 import type { FuelRecord } from "../types";
 
@@ -50,6 +51,17 @@ export default function FuelSection({
   onDelete,
   onCancelEdit,
 }: FuelSectionProps) {
+  // --------------------------------
+  // Search and sorting
+  // --------------------------------
+
+  const [fuelSearch, setFuelSearch] = useState("");
+  const [fuelSort, setFuelSort] = useState("newest");
+
+  // --------------------------------
+  // Automatic fuel cost
+  // --------------------------------
+
   function updateFuelCost(
     newGallons: string,
     newPricePerGallon: string
@@ -68,6 +80,10 @@ export default function FuelSection({
       );
     }
   }
+
+  // --------------------------------
+  // Fuel summary calculations
+  // --------------------------------
 
   const totalGallons = fuelRecords.reduce(
     (sum, record) => sum + record.gallons,
@@ -101,9 +117,102 @@ export default function FuelSection({
         mpgValues.length
       : null;
 
+  // --------------------------------
+  // Search and sort fuel history
+  // --------------------------------
+
+  const filteredAndSortedFuelRecords = [...fuelRecords]
+    .filter((record) => {
+      const search = fuelSearch.toLowerCase().trim();
+
+      if (!search) {
+        return true;
+      }
+
+      return (
+        record.station
+          ?.toLowerCase()
+          .includes(search) ||
+        record.notes
+          ?.toLowerCase()
+          .includes(search) ||
+        record.date.toLowerCase().includes(search) ||
+        record.mileage.toString().includes(search)
+      );
+    })
+    .sort((a, b) => {
+      switch (fuelSort) {
+        case "oldest":
+          return (
+            new Date(a.date).getTime() -
+            new Date(b.date).getTime()
+          );
+
+        case "mileage":
+          return b.mileage - a.mileage;
+
+        case "cost":
+          return (
+            (b.totalCost ?? 0) -
+            (a.totalCost ?? 0)
+          );
+
+        case "newest":
+        default:
+          return (
+            new Date(b.date).getTime() -
+            new Date(a.date).getTime()
+          );
+      }
+    });
+
+  // --------------------------------
+  // MPG helper
+  //
+  // IMPORTANT:
+  // Use the original fuelRecords array to find
+  // the previous fill-up. This keeps MPG correct
+  // even when the displayed list is searched or
+  // sorted differently.
+  // --------------------------------
+
+  function calculateMpg(record: FuelRecord) {
+    const sortedRecords = [...fuelRecords].sort(
+      (a, b) =>
+        new Date(b.date).getTime() -
+        new Date(a.date).getTime()
+    );
+
+    const recordIndex = sortedRecords.findIndex(
+      (item) => item.id === record.id
+    );
+
+    if (recordIndex === -1) {
+      return null;
+    }
+
+    const previousRecord =
+      sortedRecords[recordIndex + 1];
+
+    if (!previousRecord || record.gallons <= 0) {
+      return null;
+    }
+
+    const milesDriven =
+      record.mileage - previousRecord.mileage;
+
+    if (milesDriven <= 0) {
+      return null;
+    }
+
+    return milesDriven / record.gallons;
+  }
+
   return (
     <div className="card">
       <h2>⛽ Fuel Tracker</h2>
+
+      {/* Fuel summary cards */}
 
       <div className="dashboard-grid">
         <div className="dashboard-card">
@@ -126,7 +235,12 @@ export default function FuelSection({
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="maintenance-form">
+      {/* Fuel form */}
+
+      <form
+        onSubmit={onSubmit}
+        className="maintenance-form"
+      >
         <input
           required
           type="date"
@@ -219,101 +333,150 @@ export default function FuelSection({
         )}
       </form>
 
+      {/* Search and sorting */}
+
+      <div className="maintenance-search">
+        <input
+          type="text"
+          placeholder="Search fuel history..."
+          value={fuelSearch}
+          onChange={(e) =>
+            setFuelSearch(e.target.value)
+          }
+        />
+      </div>
+
+      <div className="maintenance-sort">
+        <label htmlFor="fuel-sort">
+          Sort Fuel:{" "}
+        </label>
+
+        <select
+          id="fuel-sort"
+          value={fuelSort}
+          onChange={(e) =>
+            setFuelSort(e.target.value)
+          }
+        >
+          <option value="newest">
+            Newest First
+          </option>
+
+          <option value="oldest">
+            Oldest First
+          </option>
+
+          <option value="mileage">
+            Highest Mileage
+          </option>
+
+          <option value="cost">
+            Highest Cost
+          </option>
+        </select>
+      </div>
+
+      {/* Fuel history */}
+
       <div className="maintenance-list">
-        {fuelRecords.length === 0 ? (
-          <p>No fuel records yet.</p>
+        {filteredAndSortedFuelRecords.length === 0 ? (
+          <p>
+            {fuelRecords.length === 0
+              ? "No fuel records yet."
+              : "No fuel records match your search."}
+          </p>
         ) : (
-          fuelRecords.map((record, index) => {
-            const previousRecord =
-              fuelRecords[index + 1];
+          filteredAndSortedFuelRecords.map(
+            (record) => {
+              const mpg = calculateMpg(record);
 
-            const mpg =
-              previousRecord &&
-              record.gallons > 0
-                ? (record.mileage -
-                    previousRecord.mileage) /
-                  record.gallons
-                : null;
+              return (
+                <div
+                  key={record.id}
+                  className="maintenance-record"
+                >
+                  <h3>⛽ Fuel Fill-Up</h3>
 
-            return (
-              <div
-                key={record.id}
-                className="maintenance-record"
-              >
-                <h3>⛽ Fuel Fill-Up</h3>
+                  <p>
+                    <strong>Date:</strong>{" "}
+                    {new Date(
+                      record.date
+                    ).toLocaleDateString()}
+                  </p>
 
-                <p>
-                  <strong>Date:</strong>{" "}
-                  {new Date(
-                    record.date
-                  ).toLocaleDateString()}
-                </p>
+                  <p>
+                    <strong>Mileage:</strong>{" "}
+                    {record.mileage.toLocaleString()}{" "}
+                    miles
+                  </p>
 
-                <p>
-                  <strong>Mileage:</strong>{" "}
-                  {record.mileage.toLocaleString()} miles
-                </p>
+                  <p>
+                    <strong>Gallons:</strong>{" "}
+                    {record.gallons.toFixed(3)}
+                  </p>
 
-                <p>
-                  <strong>Gallons:</strong>{" "}
-                  {record.gallons.toFixed(3)}
-                </p>
+                  <p>
+                    <strong>
+                      Price Per Gallon:
+                    </strong>{" "}
+                    {record.pricePerGallon !== null
+                      ? `$${record.pricePerGallon.toFixed(
+                          3
+                        )}`
+                      : "—"}
+                  </p>
 
-                <p>
-                  <strong>
-                    Price Per Gallon:
-                  </strong>{" "}
-                  {record.pricePerGallon !== null
-                    ? `$${record.pricePerGallon.toFixed(3)}`
-                    : "—"}
-                </p>
+                  <p>
+                    <strong>Total Cost:</strong>{" "}
+                    {record.totalCost !== null
+                      ? `$${record.totalCost.toFixed(
+                          2
+                        )}`
+                      : "—"}
+                  </p>
 
-                <p>
-                  <strong>Total Cost:</strong>{" "}
-                  {record.totalCost !== null
-                    ? `$${record.totalCost.toFixed(2)}`
-                    : "—"}
-                </p>
+                  <p>
+                    <strong>Station:</strong>{" "}
+                    {record.station || "—"}
+                  </p>
 
-                <p>
-                  <strong>Station:</strong>{" "}
-                  {record.station || "—"}
-                </p>
+                  <p>
+                    <strong>Notes:</strong>{" "}
+                    {record.notes || "—"}
+                  </p>
 
-                <p>
-                  <strong>Notes:</strong>{" "}
-                  {record.notes || "—"}
-                </p>
+                  <p>
+                    <strong>MPG:</strong>{" "}
+                    {mpg !== null
+                      ? mpg.toFixed(1)
+                      : "—"}
+                  </p>
 
-                <p>
-                  <strong>MPG:</strong>{" "}
-                  {mpg !== null && mpg > 0
-                    ? mpg.toFixed(1)
-                    : "—"}
-                </p>
+                  <div className="button-row">
+                    <button
+                      type="button"
+                      className="edit-btn"
+                      onClick={() =>
+                        onEdit(record)
+                      }
+                    >
+                      ✏️ Edit Fuel Record
+                    </button>
 
-                <div className="button-row">
-                  <button
-                    type="button"
-                    className="edit-btn"
-                    onClick={() => onEdit(record)}
-                  >
-                    ✏️ Edit Fuel Record
-                  </button>
-
-                  <button
-                    type="button"
-                    className="delete-btn"
-                    onClick={() =>
-                      onDelete(record.id)
-                    }
-                  >
-                    🗑 Delete Fuel Record
-                  </button>
+                    <button
+                      type="button"
+                      className="delete-btn"
+                      onClick={() =>
+                        onDelete(record.id)
+                      }
+                    >
+                      🗑 Delete Fuel Record
+                    </button>
+                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            }
+          )
         )}
       </div>
     </div>
