@@ -18,6 +18,7 @@ model Vehicle {
   currentMileage Int
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  fuelRecords    FuelRecord[]
 
   maintenanceRecords MaintenanceRecord[]
 }
@@ -33,6 +34,23 @@ model MaintenanceRecord {
   nextServiceDate    DateTime?
   nextServiceMileage Int?
 
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FuelRecord {
+  id        String   @id @default(cuid())
+  date      DateTime
+  mileage   Int
+  gallons   Float
+  pricePerGallon Float?
+  totalCost Float?
+  station   String?
+  notes     String?
 
   vehicleId String
   vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)

@@ -22,3 +22,17 @@ export type MaintenanceRecord = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type FuelRecord = {
+  id: string;
+  vehicleId: string;
+  date: string;
+  mileage: number;
+  gallons: number;
+  pricePerGallon: number | null;
+  totalCost: number | null;
+  station: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};

@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import type { Vehicle, MaintenanceRecord } from "./types";
+
+import type {
+  Vehicle,
+  MaintenanceRecord,
+  FuelRecord,
+} from "./types";
+
 import VehicleCard from "./components/VehicleCard";
 import VehicleForm from "./components/VehicleForm";
 import MaintenanceSection from "./components/MaintenanceSection";
+import FuelSection from "./components/FuelSection";
 import Dashboard from "./components/Dashboard";
+
 import "./App.css";
 
 type DashboardStats = {
@@ -14,6 +22,10 @@ type DashboardStats = {
 };
 
 function App() {
+  // --------------------------------
+  // Vehicle state
+  // --------------------------------
+
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   const [year, setYear] = useState("");
@@ -22,50 +34,159 @@ function App() {
   const [trim, setTrim] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
   const [currentMileage, setCurrentMileage] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
+  const [editingId, setEditingId] = useState<string | null>(
     null
   );
 
-  const [maintenanceRecords, setMaintenanceRecords] = useState<
-    MaintenanceRecord[]
-  >([]);
-  
-  const [allMaintenanceRecords, setAllMaintenanceRecords] = useState<
-  MaintenanceRecord[]
->([]);
+  const [selectedVehicleId, setSelectedVehicleId] =
+    useState<string | null>(null);
+
+  // --------------------------------
+  // Maintenance state
+  // --------------------------------
+
+  const [maintenanceRecords, setMaintenanceRecords] =
+    useState<MaintenanceRecord[]>([]);
+
+  const [
+    allMaintenanceRecords,
+    setAllMaintenanceRecords,
+  ] = useState<MaintenanceRecord[]>([]);
 
   const [serviceType, setServiceType] = useState("");
-  const [customServiceType, setCustomServiceType] = useState("");
+  const [customServiceType, setCustomServiceType] =
+    useState("");
   const [serviceDate, setServiceDate] = useState("");
-  const [maintenanceMileage, setMaintenanceMileage] = useState("");
+  const [maintenanceMileage, setMaintenanceMileage] =
+    useState("");
   const [cost, setCost] = useState("");
   const [shop, setShop] = useState("");
   const [notes, setNotes] = useState("");
 
-  const [editingMaintenanceId, setEditingMaintenanceId] =
+  const [nextServiceDate, setNextServiceDate] =
+    useState("");
+
+  const [nextServiceMileage, setNextServiceMileage] =
+    useState("");
+
+  const [
+    editingMaintenanceId,
+    setEditingMaintenanceId,
+  ] = useState<string | null>(null);
+
+  // --------------------------------
+  // Fuel state
+  // --------------------------------
+
+  const [fuelRecords, setFuelRecords] =
+    useState<FuelRecord[]>([]);
+
+  const [fuelDate, setFuelDate] = useState("");
+  const [fuelMileage, setFuelMileage] = useState("");
+  const [gallons, setGallons] = useState("");
+  const [pricePerGallon, setPricePerGallon] =
+    useState("");
+  const [totalFuelCost, setTotalFuelCost] = useState("");
+  const [station, setStation] = useState("");
+  const [fuelNotes, setFuelNotes] = useState("");
+
+  const [editingFuelId, setEditingFuelId] =
     useState<string | null>(null);
 
-  const [nextServiceDate, setNextServiceDate] = useState("");
-const [nextServiceMileage, setNextServiceMileage] = useState("");
+  // --------------------------------
+  // Dashboard state
+  // --------------------------------
 
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
-    totalVehicles: 0,
-    totalMaintenance: 0,
-    totalCost: 0,
-  });
+  const [dashboardStats, setDashboardStats] =
+    useState<DashboardStats>({
+      totalVehicles: 0,
+      totalMaintenance: 0,
+      totalCost: 0,
+    });
+
+  // --------------------------------
+  // Load data
+  // --------------------------------
 
   async function loadVehicles() {
-    const response = await fetch("http://localhost:4000/api");
+    const response = await fetch(
+      "http://localhost:4000/api"
+    );
+
+    if (!response.ok) {
+      console.error("Unable to load vehicles.");
+      return;
+    }
+
     const data = await response.json();
+
     setVehicles(data.vehicles);
   }
 
   async function loadDashboard() {
-    const response = await fetch("http://localhost:4000/api/dashboard");
+    const response = await fetch(
+      "http://localhost:4000/api/dashboard"
+    );
+
+    if (!response.ok) {
+      console.error("Unable to load dashboard.");
+      return;
+    }
+
     const data = await response.json();
+
     setDashboardStats(data);
+  }
+
+  async function loadAllMaintenance() {
+    const response = await fetch(
+      "http://localhost:4000/api/maintenance"
+    );
+
+    if (!response.ok) {
+      console.error(
+        "Unable to load all maintenance records."
+      );
+      return;
+    }
+
+    const data = await response.json();
+
+    setAllMaintenanceRecords(data);
+  }
+
+  async function loadFuelRecords(vehicleId: string) {
+    const response = await fetch(
+      `http://localhost:4000/api/vehicles/${vehicleId}/fuel`
+    );
+
+    if (!response.ok) {
+      alert("Unable to load fuel records.");
+      return;
+    }
+
+    const data = await response.json();
+
+    setFuelRecords(data);
+  }
+
+  async function loadMaintenance(vehicleId: string) {
+    const response = await fetch(
+      `http://localhost:4000/api/vehicles/${vehicleId}/maintenance`
+    );
+
+    if (!response.ok) {
+      alert("Unable to load maintenance records.");
+      return;
+    }
+
+    const data = await response.json();
+
+    setMaintenanceRecords(data);
+    setSelectedVehicleId(vehicleId);
+
+    await loadFuelRecords(vehicleId);
   }
 
   useEffect(() => {
@@ -74,32 +195,30 @@ const [nextServiceMileage, setNextServiceMileage] = useState("");
     loadAllMaintenance();
   }, []);
 
-  async function loadAllMaintenance() {
-  const response = await fetch(
-    "http://localhost:4000/api/maintenance"
-  );
-
-  const data = await response.json();
-  setAllMaintenanceRecords(data);
-}
+  // --------------------------------
+  // Vehicle functions
+  // --------------------------------
 
   async function addVehicle(event: FormEvent) {
     event.preventDefault();
 
-    const response = await fetch("http://localhost:4000/api/vehicles", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        year,
-        make,
-        model,
-        trim,
-        licensePlate,
-        currentMileage,
-      }),
-    });
+    const response = await fetch(
+      "http://localhost:4000/api/vehicles",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          year,
+          make,
+          model,
+          trim,
+          licensePlate,
+          currentMileage,
+        }),
+      }
+    );
 
     if (!response.ok) {
       alert("Unable to add vehicle.");
@@ -136,18 +255,28 @@ const [nextServiceMileage, setNextServiceMileage] = useState("");
       return;
     }
 
+    if (selectedVehicleId === id) {
+      setSelectedVehicleId(null);
+      setMaintenanceRecords([]);
+      setFuelRecords([]);
+    }
+
     await loadVehicles();
     await loadDashboard();
+    await loadAllMaintenance();
   }
 
   function startEdit(vehicle: Vehicle) {
     setEditingId(vehicle.id);
+
     setYear(vehicle.year.toString());
     setMake(vehicle.make);
     setModel(vehicle.model);
     setTrim(vehicle.trim || "");
     setLicensePlate(vehicle.licensePlate || "");
-    setCurrentMileage(vehicle.currentMileage.toString());
+    setCurrentMileage(
+      vehicle.currentMileage.toString()
+    );
 
     window.scrollTo({
       top: 0,
@@ -183,6 +312,13 @@ const [nextServiceMileage, setNextServiceMileage] = useState("");
       return;
     }
 
+    cancelVehicleEdit();
+
+    await loadVehicles();
+    await loadDashboard();
+  }
+
+  function cancelVehicleEdit() {
     setEditingId(null);
     setYear("");
     setMake("");
@@ -190,72 +326,54 @@ const [nextServiceMileage, setNextServiceMileage] = useState("");
     setTrim("");
     setLicensePlate("");
     setCurrentMileage("");
-
-    await loadVehicles();
-    await loadDashboard();
   }
 
-  async function loadMaintenance(vehicleId: string) {
-    const response = await fetch(
-      `http://localhost:4000/api/vehicles/${vehicleId}/maintenance`
-    );
-
-    const data = await response.json();
-
-    setMaintenanceRecords(data);
-    setSelectedVehicleId(vehicleId);
-  }
+  // --------------------------------
+  // Maintenance functions
+  // --------------------------------
 
   async function addMaintenance(event: FormEvent) {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (!selectedVehicleId) return;
+    if (!selectedVehicleId) return;
 
-  const finalServiceType =
-    serviceType === "Custom Service"
-      ? customServiceType
-      : serviceType;
+    const finalServiceType =
+      serviceType === "Custom Service"
+        ? customServiceType
+        : serviceType;
 
-  const response = await fetch(
-    `http://localhost:4000/api/vehicles/${selectedVehicleId}/maintenance`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        serviceType: finalServiceType,
-        serviceDate,
-        mileage: maintenanceMileage,
-        cost,
-        shop,
-        notes,
-        nextServiceDate,
-        nextServiceMileage,
-      }),
+    const response = await fetch(
+      `http://localhost:4000/api/vehicles/${selectedVehicleId}/maintenance`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          serviceType: finalServiceType,
+          serviceDate,
+          mileage: maintenanceMileage,
+          cost,
+          shop,
+          notes,
+          nextServiceDate,
+          nextServiceMileage,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      alert("Unable to save maintenance record.");
+      return;
     }
-  );
 
-  if (!response.ok) {
-    alert("Unable to save maintenance record.");
-    return;
+    cancelMaintenanceEdit();
+
+    await loadMaintenance(selectedVehicleId);
+    await loadVehicles();
+    await loadDashboard();
+    await loadAllMaintenance();
   }
-
-  setServiceType("");
-  setCustomServiceType("");
-  setServiceDate("");
-  setMaintenanceMileage("");
-  setCost("");
-  setShop("");
-  setNotes("");
-  setNextServiceDate("");
-  setNextServiceMileage("");
-
-  await loadMaintenance(selectedVehicleId);
-  await loadVehicles();
-  await loadDashboard();
-  await loadAllMaintenance();
-}
 
   async function deleteMaintenance(id: string) {
     const confirmed = window.confirm(
@@ -284,103 +402,254 @@ const [nextServiceMileage, setNextServiceMileage] = useState("");
     await loadAllMaintenance();
   }
 
-  function startMaintenanceEdit(record: MaintenanceRecord) {
-  setEditingMaintenanceId(record.id);
-  setServiceType(record.serviceType);
-  setServiceDate(record.serviceDate.slice(0, 10));
-  setMaintenanceMileage(record.mileage.toString());
-  setCost(record.cost?.toString() || "");
-  setShop(record.shop || "");
-  setNotes(record.notes || "");
-  setCustomServiceType("");
+  function startMaintenanceEdit(
+    record: MaintenanceRecord
+  ) {
+    setEditingMaintenanceId(record.id);
 
-  setNextServiceDate(
-    record.nextServiceDate
-      ? record.nextServiceDate.slice(0, 10)
-      : ""
-  );
+    setServiceType(record.serviceType);
+    setCustomServiceType("");
 
-  setNextServiceMileage(
-    record.nextServiceMileage?.toString() || ""
-  );
-}
+    setServiceDate(
+      record.serviceDate.slice(0, 10)
+    );
 
-  async function updateMaintenance(event: FormEvent) {
-  event.preventDefault();
+    setMaintenanceMileage(
+      record.mileage.toString()
+    );
 
-  if (!editingMaintenanceId || !selectedVehicleId) return;
+    setCost(record.cost?.toString() || "");
+    setShop(record.shop || "");
+    setNotes(record.notes || "");
 
-  const finalServiceType =
-    serviceType === "Custom Service"
-      ? customServiceType
-      : serviceType;
+    setNextServiceDate(
+      record.nextServiceDate
+        ? record.nextServiceDate.slice(0, 10)
+        : ""
+    );
 
-  const response = await fetch(
-    `http://localhost:4000/api/maintenance/${editingMaintenanceId}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        serviceType: finalServiceType,
-        serviceDate,
-        mileage: maintenanceMileage,
-        cost,
-        shop,
-        notes,
-        nextServiceDate,
-        nextServiceMileage,
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    alert("Unable to update maintenance record.");
-    return;
+    setNextServiceMileage(
+      record.nextServiceMileage?.toString() || ""
+    );
   }
 
-  setEditingMaintenanceId(null);
-  setServiceType("");
-  setCustomServiceType("");
-  setServiceDate("");
-  setMaintenanceMileage("");
-  setCost("");
-  setShop("");
-  setNotes("");
-  setNextServiceDate("");
-  setNextServiceMileage("");
+  async function updateMaintenance(
+    event: FormEvent
+  ) {
+    event.preventDefault();
 
-  await loadMaintenance(selectedVehicleId);
-  await loadVehicles();
-  await loadDashboard();
-  await loadAllMaintenance();
-}
+    if (
+      !editingMaintenanceId ||
+      !selectedVehicleId
+    ) {
+      return;
+    }
 
-// ADD THE NEW FUNCTION HERE
-function cancelMaintenanceEdit() {
-  setEditingMaintenanceId(null);
-  setServiceType("");
-  setCustomServiceType("");
-  setServiceDate("");
-  setMaintenanceMileage("");
-  setCost("");
-  setShop("");
-  setNotes("");
-  setNextServiceDate("");
-  setNextServiceMileage("");
-}
+    const finalServiceType =
+      serviceType === "Custom Service"
+        ? customServiceType
+        : serviceType;
+
+    const response = await fetch(
+      `http://localhost:4000/api/maintenance/${editingMaintenanceId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          serviceType: finalServiceType,
+          serviceDate,
+          mileage: maintenanceMileage,
+          cost,
+          shop,
+          notes,
+          nextServiceDate,
+          nextServiceMileage,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      alert("Unable to update maintenance record.");
+      return;
+    }
+
+    cancelMaintenanceEdit();
+
+    await loadMaintenance(selectedVehicleId);
+    await loadVehicles();
+    await loadDashboard();
+    await loadAllMaintenance();
+  }
+
+  function cancelMaintenanceEdit() {
+    setEditingMaintenanceId(null);
+    setServiceType("");
+    setCustomServiceType("");
+    setServiceDate("");
+    setMaintenanceMileage("");
+    setCost("");
+    setShop("");
+    setNotes("");
+    setNextServiceDate("");
+    setNextServiceMileage("");
+  }
+
+  // --------------------------------
+  // Fuel functions
+  // --------------------------------
+
+  async function addFuelRecord(event: FormEvent) {
+    event.preventDefault();
+
+    if (!selectedVehicleId) return;
+
+    const response = await fetch(
+      `http://localhost:4000/api/vehicles/${selectedVehicleId}/fuel`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: fuelDate,
+          mileage: fuelMileage,
+          gallons,
+          pricePerGallon,
+          totalCost: totalFuelCost,
+          station,
+          notes: fuelNotes,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      alert("Unable to save fuel record.");
+      return;
+    }
+
+    cancelFuelEdit();
+
+    await loadFuelRecords(selectedVehicleId);
+    await loadVehicles();
+  }
+
+  function startFuelEdit(record: FuelRecord) {
+    setEditingFuelId(record.id);
+
+    setFuelDate(record.date.slice(0, 10));
+    setFuelMileage(record.mileage.toString());
+    setGallons(record.gallons.toString());
+
+    setPricePerGallon(
+      record.pricePerGallon?.toString() || ""
+    );
+
+    setTotalFuelCost(
+      record.totalCost?.toString() || ""
+    );
+
+    setStation(record.station || "");
+    setFuelNotes(record.notes || "");
+  }
+
+  async function updateFuelRecord(
+    event: FormEvent
+  ) {
+    event.preventDefault();
+
+    if (!editingFuelId || !selectedVehicleId) {
+      return;
+    }
+
+    const response = await fetch(
+      `http://localhost:4000/api/fuel/${editingFuelId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: fuelDate,
+          mileage: fuelMileage,
+          gallons,
+          pricePerGallon,
+          totalCost: totalFuelCost,
+          station,
+          notes: fuelNotes,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      alert("Unable to update fuel record.");
+      return;
+    }
+
+    cancelFuelEdit();
+
+    await loadFuelRecords(selectedVehicleId);
+    await loadVehicles();
+  }
+
+  async function deleteFuelRecord(id: string) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this fuel record?"
+    );
+
+    if (!confirmed) return;
+
+    const response = await fetch(
+      `http://localhost:4000/api/fuel/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+      alert("Unable to delete fuel record.");
+      return;
+    }
+
+    if (selectedVehicleId) {
+      await loadFuelRecords(selectedVehicleId);
+    }
+  }
+
+  function cancelFuelEdit() {
+    setEditingFuelId(null);
+    setFuelDate("");
+    setFuelMileage("");
+    setGallons("");
+    setPricePerGallon("");
+    setTotalFuelCost("");
+    setStation("");
+    setFuelNotes("");
+  }
+
+  // --------------------------------
+  // UI
+  // --------------------------------
 
   return (
     <div className="container">
-      <h1 className="title">🚗 Vehicle Maintenance Dashboard</h1>
+      <h1 className="title">
+        🚗 Vehicle Maintenance Dashboard
+      </h1>
 
       <Dashboard
-        totalVehicles={dashboardStats.totalVehicles}
-        totalMaintenance={dashboardStats.totalMaintenance}
+        totalVehicles={
+          dashboardStats.totalVehicles
+        }
+        totalMaintenance={
+          dashboardStats.totalMaintenance
+        }
         totalCost={dashboardStats.totalCost}
         vehicles={vehicles}
-        maintenanceRecords={allMaintenanceRecords}
+        maintenanceRecords={
+          allMaintenanceRecords
+        }
       />
 
       <VehicleForm
@@ -397,16 +666,12 @@ function cancelMaintenanceEdit() {
         setTrim={setTrim}
         setLicensePlate={setLicensePlate}
         setCurrentMileage={setCurrentMileage}
-        onSubmit={editingId ? updateVehicle : addVehicle}
-        onCancelEdit={() => {
-          setEditingId(null);
-          setYear("");
-          setMake("");
-          setModel("");
-          setTrim("");
-          setLicensePlate("");
-          setCurrentMileage("");
-        }}
+        onSubmit={
+          editingId
+            ? updateVehicle
+            : addVehicle
+        }
+        onCancelEdit={cancelVehicleEdit}
       />
 
       <h2>My Vehicles</h2>
@@ -426,36 +691,105 @@ function cancelMaintenanceEdit() {
       )}
 
       {selectedVehicleId && (
-      <MaintenanceSection
-  maintenanceRecords={maintenanceRecords}
-  serviceType={serviceType}
-  serviceDate={serviceDate}
-  maintenanceMileage={maintenanceMileage}
-  cost={cost}
-  shop={shop}
-  notes={notes}
-  nextServiceDate={nextServiceDate}
-  nextServiceMileage={nextServiceMileage}
-  setServiceType={setServiceType}
-  setServiceDate={setServiceDate}
-  customServiceType={customServiceType}
-  setCustomServiceType={setCustomServiceType}
-  setMaintenanceMileage={setMaintenanceMileage}
-  setCost={setCost}
-  setShop={setShop}
-  setNotes={setNotes}
-  setNextServiceDate={setNextServiceDate}
-  setNextServiceMileage={setNextServiceMileage}
-  editingMaintenanceId={editingMaintenanceId}
-  onSubmit={
-    editingMaintenanceId
-      ? updateMaintenance
-      : addMaintenance
-  }
-  onEdit={startMaintenanceEdit}
-  onDelete={deleteMaintenance}
-  onCancelEdit={cancelMaintenanceEdit}
-/>  
+        <>
+          <MaintenanceSection
+            maintenanceRecords={
+              maintenanceRecords
+            }
+            serviceType={serviceType}
+            customServiceType={
+              customServiceType
+            }
+            serviceDate={serviceDate}
+            maintenanceMileage={
+              maintenanceMileage
+            }
+            cost={cost}
+            shop={shop}
+            notes={notes}
+            nextServiceDate={
+              nextServiceDate
+            }
+            nextServiceMileage={
+              nextServiceMileage
+            }
+            setServiceType={
+              setServiceType
+            }
+            setCustomServiceType={
+              setCustomServiceType
+            }
+            setServiceDate={
+              setServiceDate
+            }
+            setMaintenanceMileage={
+              setMaintenanceMileage
+            }
+            setCost={setCost}
+            setShop={setShop}
+            setNotes={setNotes}
+            setNextServiceDate={
+              setNextServiceDate
+            }
+            setNextServiceMileage={
+              setNextServiceMileage
+            }
+            editingMaintenanceId={
+              editingMaintenanceId
+            }
+            onSubmit={
+              editingMaintenanceId
+                ? updateMaintenance
+                : addMaintenance
+            }
+            onEdit={
+              startMaintenanceEdit
+            }
+            onDelete={
+              deleteMaintenance
+            }
+            onCancelEdit={
+              cancelMaintenanceEdit
+            }
+          />
+
+          <FuelSection
+            fuelRecords={fuelRecords}
+            fuelDate={fuelDate}
+            fuelMileage={fuelMileage}
+            gallons={gallons}
+            pricePerGallon={
+              pricePerGallon
+            }
+            totalFuelCost={
+              totalFuelCost
+            }
+            station={station}
+            fuelNotes={fuelNotes}
+            setFuelDate={setFuelDate}
+            setFuelMileage={
+              setFuelMileage
+            }
+            setGallons={setGallons}
+            setPricePerGallon={
+              setPricePerGallon
+            }
+            setTotalFuelCost={
+              setTotalFuelCost
+            }
+            setStation={setStation}
+            setFuelNotes={setFuelNotes}
+            editingFuelId={editingFuelId}
+            onSubmit={
+              editingFuelId
+                ? updateFuelRecord
+                : addFuelRecord
+            }
+            onEdit={startFuelEdit}
+            onDelete={deleteFuelRecord}
+            onCancelEdit={cancelFuelEdit}
+          />
+        </>
       )}
     </div>
   );

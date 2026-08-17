@@ -346,6 +346,170 @@ app.get("/api/maintenance", async (_req, res) => {
   }
 });
 
+// Get fuel records for one vehicle
+app.get("/api/vehicles/:vehicleId/fuel", async (req, res) => {
+  try {
+    const { vehicleId } = req.params;
+
+    const records = await prisma.fuelRecord.findMany({
+      where: {
+        vehicleId,
+      },
+      orderBy: {
+        date: "desc",
+      },
+    });
+
+    res.json(records);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Unable to load fuel records",
+    });
+  }
+});
+
+// Add a fuel record
+app.post("/api/vehicles/:vehicleId/fuel", async (req, res) => {
+  try {
+    const { vehicleId } = req.params;
+
+    const {
+      date,
+      mileage,
+      gallons,
+      pricePerGallon,
+      totalCost,
+      station,
+      notes,
+    } = req.body;
+
+    const record = await prisma.fuelRecord.create({
+      data: {
+        vehicleId,
+        date: new Date(date),
+        mileage: Number(mileage),
+        gallons: Number(gallons),
+        pricePerGallon:
+          pricePerGallon === "" || pricePerGallon === undefined
+            ? null
+            : Number(pricePerGallon),
+        totalCost:
+          totalCost === "" || totalCost === undefined
+            ? null
+            : Number(totalCost),
+        station: station || null,
+        notes: notes || null,
+      },
+    });
+
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+    });
+
+    const fuelMileage = Number(mileage);
+
+    if (vehicle && fuelMileage > vehicle.currentMileage) {
+      await prisma.vehicle.update({
+        where: { id: vehicleId },
+        data: {
+          currentMileage: fuelMileage,
+        },
+      });
+    }
+
+    res.status(201).json(record);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Unable to create fuel record",
+    });
+  }
+});
+
+// Delete a fuel record
+app.delete("/api/fuel/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.fuelRecord.delete({
+      where: { id },
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Unable to delete fuel record",
+    });
+  }
+});
+
+// Update a fuel record
+app.patch("/api/fuel/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      date,
+      mileage,
+      gallons,
+      pricePerGallon,
+      totalCost,
+      station,
+      notes,
+    } = req.body;
+
+    const record = await prisma.fuelRecord.update({
+      where: { id },
+      data: {
+        date: new Date(date),
+        mileage: Number(mileage),
+        gallons: Number(gallons),
+        pricePerGallon:
+          pricePerGallon === "" || pricePerGallon === undefined
+            ? null
+            : Number(pricePerGallon),
+        totalCost:
+          totalCost === "" || totalCost === undefined
+            ? null
+            : Number(totalCost),
+        station: station || null,
+        notes: notes || null,
+      },
+    });
+
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: record.vehicleId },
+    });
+
+    const editedFuelMileage = Number(mileage);
+
+    if (
+      vehicle &&
+      editedFuelMileage > vehicle.currentMileage
+    ) {
+      await prisma.vehicle.update({
+        where: { id: record.vehicleId },
+        data: {
+          currentMileage: editedFuelMileage,
+        },
+      });
+    }
+
+    res.json(record);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Unable to update fuel record",
+    });
+  }
+});
+
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
