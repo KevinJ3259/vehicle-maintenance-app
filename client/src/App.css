@@ -1,21 +1,48 @@
+/* -----------------------------
+   Global styles
+----------------------------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
   background: #f5f7fb;
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* -----------------------------
+   Main container
+----------------------------- */
+
 .container {
+  width: 100%;
   max-width: 1000px;
   margin: 40px auto;
+  padding: 0 20px;
 }
 
 .title {
   text-align: center;
   color: #1f2937;
   margin-bottom: 35px;
+  font-size: 2rem;
 }
 
+/* -----------------------------
+   Cards
+----------------------------- */
+
 .card {
+  width: 100%;
   background: white;
   border-radius: 12px;
   padding: 24px;
@@ -27,18 +54,35 @@ body {
   margin-top: 0;
 }
 
+/* -----------------------------
+   Forms
+----------------------------- */
+
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 15px;
 }
 
-input {
+input,
+select,
+textarea {
+  width: 100%;
+  max-width: 100%;
   padding: 12px;
   border-radius: 8px;
   border: 1px solid #ccc;
   font-size: 15px;
+  font-family: inherit;
 }
+
+textarea {
+  resize: vertical;
+}
+
+/* -----------------------------
+   Buttons
+----------------------------- */
 
 button {
   background: #2563eb;
@@ -55,6 +99,10 @@ button:hover {
   background: #1d4ed8;
 }
 
+/* -----------------------------
+   Vehicle cards
+----------------------------- */
+
 .vehicle-card {
   border-left: 6px solid #2563eb;
 }
@@ -66,9 +114,13 @@ button:hover {
 
 .vehicle-info {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
+
+/* -----------------------------
+   Secondary button
+----------------------------- */
 
 .secondary-btn {
   margin-left: 10px;
@@ -78,6 +130,10 @@ button:hover {
 .secondary-btn:hover {
   background: #4b5563;
 }
+
+/* -----------------------------
+   Maintenance status
+----------------------------- */
 
 .maintenance-status {
   display: inline-block;
@@ -101,4 +157,102 @@ button:hover {
 .maintenance-status.upcoming {
   background: #dcfce7;
   color: #15803d;
+}
+
+/* =================================
+   TABLET
+   768px - 1023px
+================================= */
+
+@media (max-width: 1023px) {
+  .container {
+    max-width: 100%;
+    margin: 30px auto;
+    padding: 0 20px;
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+}
+
+/* =================================
+   PHONE
+   767px and below
+================================= */
+
+@media (max-width: 767px) {
+  .container {
+    width: 100%;
+    margin: 20px auto;
+    padding: 0 12px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    line-height: 1.3;
+    margin-bottom: 25px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .vehicle-info {
+    grid-template-columns: 1fr;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  button {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 8px;
+  }
+
+  .secondary-btn {
+    margin-left: 0;
+  }
+}
+
+/* =================================
+   SMALL PHONES
+   480px and below
+================================= */
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 10px;
+  }
+
+  .title {
+    font-size: 1.3rem;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .card h2 {
+    font-size: 1.2rem;
+  }
+
+  .vehicle-card h3 {
+    font-size: 1.1rem;
+  }
 }
