@@ -681,12 +681,13 @@ function App() {
       ) : (
         vehicles.map((vehicle) => (
           <VehicleCard
-            key={vehicle.id}
-            vehicle={vehicle}
-            onEdit={startEdit}
-            onDelete={deleteVehicle}
-            onMaintenance={loadMaintenance}
-          />
+  key={vehicle.id}
+  vehicle={vehicle}
+  maintenanceRecords={allMaintenanceRecords}
+  onEdit={startEdit}
+  onDelete={deleteVehicle}
+  onMaintenance={loadMaintenance}
+/>
         ))
       )}
 
