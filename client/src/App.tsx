@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import VehicleDetail from "./components/VehicleDetail";
 import type { FormEvent } from "react";
 
 import type {
@@ -14,6 +15,9 @@ import FuelSection from "./components/FuelSection";
 import Dashboard from "./components/Dashboard";
 
 import "./App.css";
+
+const API_URL =
+  import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 type DashboardStats = {
   totalVehicles: number;
@@ -41,6 +45,13 @@ function App() {
 
   const [selectedVehicleId, setSelectedVehicleId] =
     useState<string | null>(null);
+
+  const [detailVehicleId, setDetailVehicleId] =
+    useState<string | null>(null);
+
+  const detailVehicle = vehicles.find(
+    (vehicle) => vehicle.id === detailVehicleId
+);
 
   // --------------------------------
   // Maintenance state
@@ -111,7 +122,7 @@ function App() {
 
   async function loadVehicles() {
     const response = await fetch(
-      "http://localhost:4000/api"
+      `${API_URL}/api/vehicles`
     );
 
     if (!response.ok) {
@@ -126,7 +137,7 @@ function App() {
 
   async function loadDashboard() {
     const response = await fetch(
-      "http://localhost:4000/api/dashboard"
+      `${API_URL}/api/dashboard`
     );
 
     if (!response.ok) {
@@ -141,7 +152,7 @@ function App() {
 
   async function loadAllMaintenance() {
     const response = await fetch(
-      "http://localhost:4000/api/maintenance"
+      `${API_URL}/api/maintenance`
     );
 
     if (!response.ok) {
@@ -158,7 +169,7 @@ function App() {
 
   async function loadFuelRecords(vehicleId: string) {
     const response = await fetch(
-      `http://localhost:4000/api/vehicles/${vehicleId}/fuel`
+      `${API_URL}/api/vehicles/${vehicleId}/fuel`
     );
 
     if (!response.ok) {
@@ -173,7 +184,7 @@ function App() {
 
   async function loadMaintenance(vehicleId: string) {
     const response = await fetch(
-      `http://localhost:4000/api/vehicles/${vehicleId}/maintenance`
+      `${API_URL}/api/vehicles/${vehicleId}/maintenance`
     );
 
     if (!response.ok) {
@@ -203,7 +214,7 @@ function App() {
     event.preventDefault();
 
     const response = await fetch(
-      "http://localhost:4000/api/vehicles",
+      `${API_URL}/api/vehicles`,
       {
         method: "POST",
         headers: {
@@ -244,7 +255,7 @@ function App() {
     if (!confirmed) return;
 
     const response = await fetch(
-      `http://localhost:4000/api/vehicles/${id}`,
+      `${API_URL}/api/vehicles/${id}`,
       {
         method: "DELETE",
       }
@@ -290,7 +301,7 @@ function App() {
     if (!editingId) return;
 
     const response = await fetch(
-      `http://localhost:4000/api/vehicles/${editingId}`,
+      `${API_URL}/api/vehicles/${editingId}`,
       {
         method: "PATCH",
         headers: {
@@ -343,7 +354,7 @@ function App() {
         : serviceType;
 
     const response = await fetch(
-      `http://localhost:4000/api/vehicles/${selectedVehicleId}/maintenance`,
+      `${API_URL}/api/vehicles/${selectedVehicleId}/maintenance`,
       {
         method: "POST",
         headers: {
@@ -383,7 +394,7 @@ function App() {
     if (!confirmed) return;
 
     const response = await fetch(
-      `http://localhost:4000/api/maintenance/${id}`,
+      `${API_URL}/api/maintenance/${id}`,
       {
         method: "DELETE",
       }
@@ -451,7 +462,7 @@ function App() {
         : serviceType;
 
     const response = await fetch(
-      `http://localhost:4000/api/maintenance/${editingMaintenanceId}`,
+      `${API_URL}/api/maintenance/${editingMaintenanceId}`,
       {
         method: "PATCH",
         headers: {
@@ -496,6 +507,11 @@ function App() {
     setNextServiceMileage("");
   }
 
+  async function openVehicleDetails(vehicleId: string) {
+  await loadFuelRecords(vehicleId);
+  setDetailVehicleId(vehicleId);
+}
+
   // --------------------------------
   // Fuel functions
   // --------------------------------
@@ -506,7 +522,7 @@ function App() {
     if (!selectedVehicleId) return;
 
     const response = await fetch(
-      `http://localhost:4000/api/vehicles/${selectedVehicleId}/fuel`,
+      `${API_URL}/api/vehicles/${selectedVehicleId}/fuel`,
       {
         method: "POST",
         headers: {
@@ -564,7 +580,7 @@ function App() {
     }
 
     const response = await fetch(
-      `http://localhost:4000/api/fuel/${editingFuelId}`,
+      `${API_URL}/api/fuel/${editingFuelId}`,
       {
         method: "PATCH",
         headers: {
@@ -601,7 +617,7 @@ function App() {
     if (!confirmed) return;
 
     const response = await fetch(
-      `http://localhost:4000/api/fuel/${id}`,
+      `${API_URL}/api/fuel/${id}`,
       {
         method: "DELETE",
       }
@@ -681,14 +697,24 @@ function App() {
       ) : (
         vehicles.map((vehicle) => (
           <VehicleCard
-  key={vehicle.id}
-  vehicle={vehicle}
-  maintenanceRecords={allMaintenanceRecords}
-  onEdit={startEdit}
-  onDelete={deleteVehicle}
-  onMaintenance={loadMaintenance}
-/>
+            key={vehicle.id}
+            vehicle={vehicle}
+            maintenanceRecords={allMaintenanceRecords}
+            onEdit={startEdit}
+            onDelete={deleteVehicle}
+            onMaintenance={loadMaintenance}
+            onViewDetails={openVehicleDetails}
+            />
         ))
+      )}
+
+      {detailVehicle && (
+        <VehicleDetail
+          vehicle={detailVehicle}
+          maintenanceRecords={allMaintenanceRecords}
+          fuelRecords={fuelRecords}
+          onClose={() => setDetailVehicleId(null)}
+        />
       )}
 
       {selectedVehicleId && (

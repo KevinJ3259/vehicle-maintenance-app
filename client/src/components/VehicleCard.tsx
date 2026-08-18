@@ -9,6 +9,7 @@ type VehicleCardProps = {
   onEdit: (vehicle: Vehicle) => void;
   onDelete: (id: string) => void;
   onMaintenance: (id: string) => void;
+  onViewDetails: (id: string) => void;
 };
 
 export default function VehicleCard({
@@ -17,6 +18,7 @@ export default function VehicleCard({
   onEdit,
   onDelete,
   onMaintenance,
+  onViewDetails,
 }: VehicleCardProps) {
   const vehicleMaintenance = maintenanceRecords.filter(
     (record) => record.vehicleId === vehicle.id
@@ -138,6 +140,13 @@ const daysSinceLastService = lastServiceDate
         >
           🗑 Delete
         </button>
+
+        <button
+  type="button"
+  onClick={() => onViewDetails(vehicle.id)}
+>
+  👁 View Details
+</button>
       </div>
 
       <div style={{ marginTop: "15px" }}>
