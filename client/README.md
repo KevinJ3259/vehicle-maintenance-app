@@ -1,75 +1,225 @@
-# React + TypeScript + Vite
+# Vehicle Maintenance App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack vehicle management application built to help users organize vehicle information, maintenance activity, and fuel records in one centralized application.
 
-Currently, two official plugins are available:
+The project demonstrates full-stack software development using React and TypeScript on the frontend, a Node.js/Express REST API on the backend, and PostgreSQL with Prisma for persistent data storage.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Manage vehicle information
+- Track vehicle maintenance and service activity
+- Record fuel purchases
+- Track mileage at each fuel stop
+- Record gallons purchased
+- Track price per gallon and total fuel cost
+- Record gas station information
+- Add notes to fuel records
+- Maintain vehicle-related data in PostgreSQL
+- Responsive React-based user interface
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+### Frontend
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- React
+- TypeScript
+- Vite
+- CSS
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Backend
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Node.js
+- Express
+- TypeScript
+- REST API
+- CORS
+- dotenv
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Database
 
+- PostgreSQL
+- Prisma ORM
+
+### Development Tools
+
+- Git
+- GitHub
+- Visual Studio Code
+- npm
+
+## Architecture
+
+The application uses a client/server architecture:
+
+```text
+vehicle-maintenance-app/
+├── client/          # React + TypeScript frontend
+└── server/          # Node.js + Express API
+    └── prisma/      # Prisma schema and database configuration
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The React client communicates with the Express backend, which handles application logic and database operations.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Prisma provides the data-access layer between the Node.js server and PostgreSQL database.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Fuel Tracking
+
+Fuel records can store information including:
+
+- Date
+- Vehicle mileage
+- Gallons purchased
+- Price per gallon
+- Total cost
+- Gas station
+- Notes
+- Associated vehicle
+
+Each fuel record is associated with a vehicle, allowing fuel history to remain organized by vehicle.
+
+## Getting Started
+
+### Prerequisites
+
+Before running the project locally, install:
+
+- Node.js
+- npm
+- PostgreSQL
+- Git
+
+## Clone the Repository
+
+Using SSH:
+
+```bash
+git clone git@github.com:KevinJ3259/vehicle-maintenance-app.git
+```
+
+Move into the project:
+
+```bash
+cd vehicle-maintenance-app
+```
+
+## Backend Setup
+
+Navigate to the server:
+
+```bash
+cd server
+```
+
+Install the server dependencies:
+
+```bash
+npm install
+```
+
+Create the required environment configuration for your PostgreSQL database.
+
+For example:
+
+```env
+DATABASE_URL="postgresql://USERNAME:PASSWORD@localhost:5432/DATABASE_NAME"
+```
+
+Run the Prisma database setup required by the project.
+
+Depending on the existing migrations, this may include:
+
+```bash
+npx prisma migrate dev
+```
+
+Generate the Prisma client if necessary:
+
+```bash
+npx prisma generate
+```
+
+Start the backend development server using the development script configured in `server/package.json`.
+
+## Frontend Setup
+
+Open another terminal and navigate to the client:
+
+```bash
+cd client
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the Vite development server:
+
+```bash
+npm run dev
+```
+
+Vite will display the local application URL in the terminal.
+
+## Screenshots
+
+### Vehicle Dashboard
+
+_Add a screenshot of the main vehicle dashboard here._
+
+### Maintenance Tracking
+
+_Add a screenshot of the maintenance interface here._
+
+### Fuel Tracking
+
+_Add a screenshot of the fuel tracking interface here._
+
+## Live Demo
+
+Add the deployed application URL here.
+
+## What This Project Demonstrates
+
+This project demonstrates experience with:
+
+- Full-stack application development
+- React component-based UI development
+- TypeScript
+- REST API development
+- Node.js and Express
+- Relational database design
+- PostgreSQL
+- Prisma ORM
+- Client/server architecture
+- CRUD operations
+- Git and GitHub version control
+- Responsive web development
+
+## Future Improvements
+
+Potential future enhancements include:
+
+- User authentication and individual accounts
+- Automated maintenance reminders
+- Mileage-based service notifications
+- Fuel economy calculations
+- Fuel cost analytics
+- Maintenance cost reporting
+- Charts and vehicle expense dashboards
+- Improved mobile experience
+- Cloud deployment improvements
+- Automated testing
+
+## Author
+
+**Kevin Jordan**
+
+Software Engineer | Full-Stack Developer
+
+GitHub: [KevinJ3259](https://github.com/KevinJ3259)
+
+```
 
 ```
