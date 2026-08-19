@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Get all vehicles
-app.get("/api", async (_req, res) => {
+app.get("/api/vehicles", async (_req, res) => {
   try {
     const vehicles = await prisma.vehicle.findMany();
 
