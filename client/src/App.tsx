@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import VehicleDetail from "./components/VehicleDetail";
 import type { FormEvent } from "react";
+
+import VehicleDetail from "./components/VehicleDetail";
+import VehicleCard from "./components/VehicleCard";
+import VehicleForm from "./components/VehicleForm";
+import MaintenanceSection from "./components/MaintenanceSection";
+import FuelSection from "./components/FuelSection";
+import Dashboard from "./components/Dashboard";
 
 import type {
   Vehicle,
@@ -8,16 +14,22 @@ import type {
   FuelRecord,
 } from "./types";
 
-import VehicleCard from "./components/VehicleCard";
-import VehicleForm from "./components/VehicleForm";
-import MaintenanceSection from "./components/MaintenanceSection";
-import FuelSection from "./components/FuelSection";
-import Dashboard from "./components/Dashboard";
-
 import "./App.css";
 
-const API_URL =
-  import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+/*
+ * API base URL
+ *
+ * Production:
+ * VITE_API_URL=https://vehicle-maintenance-app-z53d.onrender.com
+ *
+ * This also protects against accidentally setting VITE_API_URL
+ * to a URL ending in /api or /.
+ */
+const API_URL = (
+  import.meta.env.VITE_API_URL ?? "http://localhost:4000"
+)
+  .replace(/\/api\/?$/, "")
+  .replace(/\/$/, "");
 
 type DashboardStats = {
   totalVehicles: number;
@@ -26,9 +38,9 @@ type DashboardStats = {
 };
 
 function App() {
-  // --------------------------------
+  // --------------------------------------------------
   // Vehicle state
-  // --------------------------------
+  // --------------------------------------------------
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
@@ -51,11 +63,11 @@ function App() {
 
   const detailVehicle = vehicles.find(
     (vehicle) => vehicle.id === detailVehicleId
-);
+  );
 
-  // --------------------------------
+  // --------------------------------------------------
   // Maintenance state
-  // --------------------------------
+  // --------------------------------------------------
 
   const [maintenanceRecords, setMaintenanceRecords] =
     useState<MaintenanceRecord[]>([]);
@@ -86,9 +98,9 @@ function App() {
     setEditingMaintenanceId,
   ] = useState<string | null>(null);
 
-  // --------------------------------
+  // --------------------------------------------------
   // Fuel state
-  // --------------------------------
+  // --------------------------------------------------
 
   const [fuelRecords, setFuelRecords] =
     useState<FuelRecord[]>([]);
@@ -98,16 +110,17 @@ function App() {
   const [gallons, setGallons] = useState("");
   const [pricePerGallon, setPricePerGallon] =
     useState("");
-  const [totalFuelCost, setTotalFuelCost] = useState("");
+  const [totalFuelCost, setTotalFuelCost] =
+    useState("");
   const [station, setStation] = useState("");
   const [fuelNotes, setFuelNotes] = useState("");
 
   const [editingFuelId, setEditingFuelId] =
     useState<string | null>(null);
 
-  // --------------------------------
+  // --------------------------------------------------
   // Dashboard state
-  // --------------------------------
+  // --------------------------------------------------
 
   const [dashboardStats, setDashboardStats] =
     useState<DashboardStats>({
@@ -116,55 +129,74 @@ function App() {
       totalCost: 0,
     });
 
-  // --------------------------------
+  // --------------------------------------------------
   // Load data
-  // --------------------------------
+  // --------------------------------------------------
 
   async function loadVehicles() {
-    const response = await fetch(
-      `${API_URL}/api/vehicles`
-    );
+    try {
+      const response = await fetch(
+        `${API_URL}/api/vehicles`
+      );
 
-    if (!response.ok) {
-      console.error("Unable to load vehicles.");
-      return;
+      if (!response.ok) {
+        console.error(
+          "Unable to load vehicles:",
+          response.status
+        );
+        return;
+      }
+
+      const data = await response.json();
+      setVehicles(data.vehicles);
+    } catch (error) {
+      console.error("Unable to load vehicles:", error);
     }
-
-    const data = await response.json();
-
-    setVehicles(data.vehicles);
   }
 
   async function loadDashboard() {
-    const response = await fetch(
-      `${API_URL}/api/dashboard`
-    );
+    try {
+      const response = await fetch(
+        `${API_URL}/api/dashboard`
+      );
 
-    if (!response.ok) {
-      console.error("Unable to load dashboard.");
-      return;
+      if (!response.ok) {
+        console.error(
+          "Unable to load dashboard:",
+          response.status
+        );
+        return;
+      }
+
+      const data = await response.json();
+      setDashboardStats(data);
+    } catch (error) {
+      console.error("Unable to load dashboard:", error);
     }
-
-    const data = await response.json();
-
-    setDashboardStats(data);
   }
 
   async function loadAllMaintenance() {
-    const response = await fetch(
-      `${API_URL}/api/maintenance`
-    );
-
-    if (!response.ok) {
-      console.error(
-        "Unable to load all maintenance records."
+    try {
+      const response = await fetch(
+        `${API_URL}/api/maintenance`
       );
-      return;
+
+      if (!response.ok) {
+        console.error(
+          "Unable to load all maintenance records:",
+          response.status
+        );
+        return;
+      }
+
+      const data = await response.json();
+      setAllMaintenanceRecords(data);
+    } catch (error) {
+      console.error(
+        "Unable to load all maintenance records:",
+        error
+      );
     }
-
-    const data = await response.json();
-
-    setAllMaintenanceRecords(data);
   }
 
   async function loadFuelRecords(vehicleId: string) {
@@ -178,7 +210,6 @@ function App() {
     }
 
     const data = await response.json();
-
     setFuelRecords(data);
   }
 
@@ -206,45 +237,54 @@ function App() {
     loadAllMaintenance();
   }, []);
 
-  // --------------------------------
+  // --------------------------------------------------
   // Vehicle functions
-  // --------------------------------
+  // --------------------------------------------------
 
   async function addVehicle(event: FormEvent) {
     event.preventDefault();
 
-    const response = await fetch(
-      `${API_URL}/api/vehicles`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          year,
-          make,
-          model,
-          trim,
-          licensePlate,
-          currentMileage,
-        }),
+    try {
+      const response = await fetch(
+        `${API_URL}/api/vehicles`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            year,
+            make,
+            model,
+            trim,
+            licensePlate,
+            currentMileage,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error(
+          "Unable to add vehicle:",
+          response.status
+        );
+        alert("Unable to add vehicle.");
+        return;
       }
-    );
 
-    if (!response.ok) {
+      setYear("");
+      setMake("");
+      setModel("");
+      setTrim("");
+      setLicensePlate("");
+      setCurrentMileage("");
+
+      await loadVehicles();
+      await loadDashboard();
+    } catch (error) {
+      console.error("Unable to add vehicle:", error);
       alert("Unable to add vehicle.");
-      return;
     }
-
-    setYear("");
-    setMake("");
-    setModel("");
-    setTrim("");
-    setLicensePlate("");
-    setCurrentMileage("");
-
-    await loadVehicles();
-    await loadDashboard();
   }
 
   async function deleteVehicle(id: string) {
@@ -339,9 +379,9 @@ function App() {
     setCurrentMileage("");
   }
 
-  // --------------------------------
+  // --------------------------------------------------
   // Maintenance functions
-  // --------------------------------
+  // --------------------------------------------------
 
   async function addMaintenance(event: FormEvent) {
     event.preventDefault();
@@ -507,14 +547,16 @@ function App() {
     setNextServiceMileage("");
   }
 
-  async function openVehicleDetails(vehicleId: string) {
-  await loadFuelRecords(vehicleId);
-  setDetailVehicleId(vehicleId);
-}
+  async function openVehicleDetails(
+    vehicleId: string
+  ) {
+    await loadFuelRecords(vehicleId);
+    setDetailVehicleId(vehicleId);
+  }
 
-  // --------------------------------
+  // --------------------------------------------------
   // Fuel functions
-  // --------------------------------
+  // --------------------------------------------------
 
   async function addFuelRecord(event: FormEvent) {
     event.preventDefault();
@@ -644,9 +686,9 @@ function App() {
     setFuelNotes("");
   }
 
-  // --------------------------------
+  // --------------------------------------------------
   // UI
-  // --------------------------------
+  // --------------------------------------------------
 
   return (
     <div className="container">
@@ -655,17 +697,13 @@ function App() {
       </h1>
 
       <Dashboard
-        totalVehicles={
-          dashboardStats.totalVehicles
-        }
+        totalVehicles={dashboardStats.totalVehicles}
         totalMaintenance={
           dashboardStats.totalMaintenance
         }
         totalCost={dashboardStats.totalCost}
         vehicles={vehicles}
-        maintenanceRecords={
-          allMaintenanceRecords
-        }
+        maintenanceRecords={allMaintenanceRecords}
       />
 
       <VehicleForm
@@ -699,21 +737,27 @@ function App() {
           <VehicleCard
             key={vehicle.id}
             vehicle={vehicle}
-            maintenanceRecords={allMaintenanceRecords}
+            maintenanceRecords={
+              allMaintenanceRecords
+            }
             onEdit={startEdit}
             onDelete={deleteVehicle}
             onMaintenance={loadMaintenance}
             onViewDetails={openVehicleDetails}
-            />
+          />
         ))
       )}
 
       {detailVehicle && (
         <VehicleDetail
           vehicle={detailVehicle}
-          maintenanceRecords={allMaintenanceRecords}
+          maintenanceRecords={
+            allMaintenanceRecords
+          }
           fuelRecords={fuelRecords}
-          onClose={() => setDetailVehicleId(null)}
+          onClose={() =>
+            setDetailVehicleId(null)
+          }
         />
       )}
 
@@ -734,21 +778,15 @@ function App() {
             cost={cost}
             shop={shop}
             notes={notes}
-            nextServiceDate={
-              nextServiceDate
-            }
+            nextServiceDate={nextServiceDate}
             nextServiceMileage={
               nextServiceMileage
             }
-            setServiceType={
-              setServiceType
-            }
+            setServiceType={setServiceType}
             setCustomServiceType={
               setCustomServiceType
             }
-            setServiceDate={
-              setServiceDate
-            }
+            setServiceDate={setServiceDate}
             setMaintenanceMileage={
               setMaintenanceMileage
             }
@@ -769,12 +807,8 @@ function App() {
                 ? updateMaintenance
                 : addMaintenance
             }
-            onEdit={
-              startMaintenanceEdit
-            }
-            onDelete={
-              deleteMaintenance
-            }
+            onEdit={startMaintenanceEdit}
+            onDelete={deleteMaintenance}
             onCancelEdit={
               cancelMaintenanceEdit
             }
@@ -785,18 +819,12 @@ function App() {
             fuelDate={fuelDate}
             fuelMileage={fuelMileage}
             gallons={gallons}
-            pricePerGallon={
-              pricePerGallon
-            }
-            totalFuelCost={
-              totalFuelCost
-            }
+            pricePerGallon={pricePerGallon}
+            totalFuelCost={totalFuelCost}
             station={station}
             fuelNotes={fuelNotes}
             setFuelDate={setFuelDate}
-            setFuelMileage={
-              setFuelMileage
-            }
+            setFuelMileage={setFuelMileage}
             setGallons={setGallons}
             setPricePerGallon={
               setPricePerGallon
