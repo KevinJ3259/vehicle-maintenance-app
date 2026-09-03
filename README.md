@@ -17,6 +17,34 @@ The project demonstrates full-stack software development using React and TypeScr
 - Maintain vehicle-related data in PostgreSQL
 - Responsive React-based user interface
 
+## Screenshots
+
+### Dashboard
+
+The dashboard provides an overview of registered vehicles, maintenance activity, expenses, and upcoming maintenance alerts.
+
+![Vehicle Maintenance Dashboard](screenshots/dashboard.png)
+
+### Vehicle Management
+
+Users can add and manage vehicles while tracking important information such as mileage and vehicle details.
+
+![Vehicle Management](screenshots/vehicles.png)
+
+### Maintenance Tracking
+
+Maintenance records help users keep track of completed services and upcoming maintenance needs.
+
+![Maintenance Tracking](screenshots/maintenance.png)
+
+### Fuel Tracking
+
+Fuel records allow users to track fuel purchases, mileage, gallons purchased, and fuel costs.
+
+![Fuel Tracking](screenshots/fuel-tracking.png)
+
+---
+
 ## Tech Stack
 
 ### Frontend

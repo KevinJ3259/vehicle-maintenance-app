@@ -37,7 +37,81 @@ type DashboardStats = {
   totalCost: number;
 };
 
+type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 function App() {
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem("vehicle_maintenance_token")
+  );
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const savedUser = localStorage.getItem("vehicle_maintenance_user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authName, setAuthName] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+
+  function authHeaders(includeJson = false): HeadersInit {
+    return {
+      ...(includeJson ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }
+
+  async function handleAuth(event: FormEvent) {
+    event.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/api/auth/${authMode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: authName,
+          email: authEmail,
+          password: authPassword,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setAuthError(data.message || "Unable to continue");
+        return;
+      }
+
+      localStorage.setItem("vehicle_maintenance_token", data.token);
+      localStorage.setItem("vehicle_maintenance_user", JSON.stringify(data.user));
+      setToken(data.token);
+      setUser(data.user);
+      setAuthName("");
+      setAuthPassword("");
+    } catch {
+      setAuthError("Unable to connect to the server");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("vehicle_maintenance_token");
+    localStorage.removeItem("vehicle_maintenance_user");
+    setToken(null);
+    setUser(null);
+    setVehicles([]);
+    setMaintenanceRecords([]);
+    setAllMaintenanceRecords([]);
+    setFuelRecords([]);
+    setSelectedVehicleId(null);
+    setDetailVehicleId(null);
+  }
   // --------------------------------------------------
   // Vehicle state
   // --------------------------------------------------
@@ -136,7 +210,8 @@ function App() {
   async function loadVehicles() {
     try {
       const response = await fetch(
-        `${API_URL}/api/vehicles`
+        `${API_URL}/api/vehicles`,
+        { headers: authHeaders() }
       );
 
       if (!response.ok) {
@@ -157,7 +232,8 @@ function App() {
   async function loadDashboard() {
     try {
       const response = await fetch(
-        `${API_URL}/api/dashboard`
+        `${API_URL}/api/dashboard`,
+        { headers: authHeaders() }
       );
 
       if (!response.ok) {
@@ -178,7 +254,8 @@ function App() {
   async function loadAllMaintenance() {
     try {
       const response = await fetch(
-        `${API_URL}/api/maintenance`
+        `${API_URL}/api/maintenance`,
+        { headers: authHeaders() }
       );
 
       if (!response.ok) {
@@ -201,7 +278,8 @@ function App() {
 
   async function loadFuelRecords(vehicleId: string) {
     const response = await fetch(
-      `${API_URL}/api/vehicles/${vehicleId}/fuel`
+      `${API_URL}/api/vehicles/${vehicleId}/fuel`,
+      { headers: authHeaders() }
     );
 
     if (!response.ok) {
@@ -215,7 +293,8 @@ function App() {
 
   async function loadMaintenance(vehicleId: string) {
     const response = await fetch(
-      `${API_URL}/api/vehicles/${vehicleId}/maintenance`
+      `${API_URL}/api/vehicles/${vehicleId}/maintenance`,
+      { headers: authHeaders() }
     );
 
     if (!response.ok) {
@@ -232,10 +311,12 @@ function App() {
   }
 
   useEffect(() => {
-    loadVehicles();
-    loadDashboard();
-    loadAllMaintenance();
-  }, []);
+    if (token) {
+      loadVehicles();
+      loadDashboard();
+      loadAllMaintenance();
+    }
+  }, [token]);
 
   // --------------------------------------------------
   // Vehicle functions
@@ -249,9 +330,7 @@ function App() {
         `${API_URL}/api/vehicles`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: authHeaders(true),
           body: JSON.stringify({
             year,
             make,
@@ -298,6 +377,7 @@ function App() {
       `${API_URL}/api/vehicles/${id}`,
       {
         method: "DELETE",
+        headers: authHeaders(),
       }
     );
 
@@ -344,9 +424,7 @@ function App() {
       `${API_URL}/api/vehicles/${editingId}`,
       {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(true),
         body: JSON.stringify({
           year,
           make,
@@ -397,9 +475,7 @@ function App() {
       `${API_URL}/api/vehicles/${selectedVehicleId}/maintenance`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(true),
         body: JSON.stringify({
           serviceType: finalServiceType,
           serviceDate,
@@ -437,6 +513,7 @@ function App() {
       `${API_URL}/api/maintenance/${id}`,
       {
         method: "DELETE",
+        headers: authHeaders(),
       }
     );
 
@@ -505,9 +582,7 @@ function App() {
       `${API_URL}/api/maintenance/${editingMaintenanceId}`,
       {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(true),
         body: JSON.stringify({
           serviceType: finalServiceType,
           serviceDate,
@@ -567,9 +642,7 @@ function App() {
       `${API_URL}/api/vehicles/${selectedVehicleId}/fuel`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(true),
         body: JSON.stringify({
           date: fuelDate,
           mileage: fuelMileage,
@@ -625,9 +698,7 @@ function App() {
       `${API_URL}/api/fuel/${editingFuelId}`,
       {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders(true),
         body: JSON.stringify({
           date: fuelDate,
           mileage: fuelMileage,
@@ -662,6 +733,7 @@ function App() {
       `${API_URL}/api/fuel/${id}`,
       {
         method: "DELETE",
+        headers: authHeaders(),
       }
     );
 
@@ -690,8 +762,100 @@ function App() {
   // UI
   // --------------------------------------------------
 
+  if (!token) {
+    return (
+      <div className="container">
+        <div
+          style={{
+            maxWidth: "460px",
+            margin: "60px auto",
+            padding: "28px",
+            borderRadius: "16px",
+            background: "white",
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.12)",
+          }}
+        >
+          <h1 className="title">🚗 Vehicle Maintenance</h1>
+          <h2>{authMode === "login" ? "Log In" : "Create Account"}</h2>
+
+          <form onSubmit={handleAuth}>
+            {authMode === "register" && (
+              <label>
+                Name
+                <input
+                  type="text"
+                  value={authName}
+                  onChange={(event) => setAuthName(event.target.value)}
+                  required
+                />
+              </label>
+            )}
+
+            <label>
+              Email
+              <input
+                type="email"
+                value={authEmail}
+                onChange={(event) => setAuthEmail(event.target.value)}
+                required
+              />
+            </label>
+
+            <label>
+              Password
+              <input
+                type="password"
+                value={authPassword}
+                onChange={(event) => setAuthPassword(event.target.value)}
+                minLength={8}
+                required
+              />
+            </label>
+
+            {authError && <p style={{ color: "#b91c1c" }}>{authError}</p>}
+
+            <button type="submit" disabled={authLoading}>
+              {authLoading
+                ? "Please wait..."
+                : authMode === "login"
+                  ? "Log In"
+                  : "Create Account"}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode(authMode === "login" ? "register" : "login");
+              setAuthError("");
+            }}
+            style={{ marginTop: "14px" }}
+          >
+            {authMode === "login"
+              ? "Need an account? Register"
+              : "Already have an account? Log in"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "16px",
+        }}
+      >
+        <p>Welcome, {user?.name}</p>
+        <button type="button" onClick={logout}>
+          Log Out
+        </button>
+      </div>
+
       <h1 className="title">
         🚗 Vehicle Maintenance Dashboard
       </h1>
