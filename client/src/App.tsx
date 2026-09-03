@@ -124,6 +124,7 @@ function App() {
   const [trim, setTrim] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
   const [currentMileage, setCurrentMileage] = useState("");
+  const [expectedMpg, setExpectedMpg] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(
     null
@@ -338,6 +339,7 @@ function App() {
             trim,
             licensePlate,
             currentMileage,
+            expectedMpg,
           }),
         }
       );
@@ -357,6 +359,7 @@ function App() {
       setTrim("");
       setLicensePlate("");
       setCurrentMileage("");
+      setExpectedMpg("");
 
       await loadVehicles();
       await loadDashboard();
@@ -408,6 +411,7 @@ function App() {
     setCurrentMileage(
       vehicle.currentMileage.toString()
     );
+    setExpectedMpg(vehicle.expectedMpg?.toString() || "");
 
     window.scrollTo({
       top: 0,
@@ -432,6 +436,7 @@ function App() {
           trim,
           licensePlate,
           currentMileage,
+          expectedMpg,
         }),
       }
     );
@@ -455,6 +460,7 @@ function App() {
     setTrim("");
     setLicensePlate("");
     setCurrentMileage("");
+    setExpectedMpg("");
   }
 
   // --------------------------------------------------
@@ -878,12 +884,14 @@ function App() {
         trim={trim}
         licensePlate={licensePlate}
         currentMileage={currentMileage}
+        expectedMpg={expectedMpg}
         setYear={setYear}
         setMake={setMake}
         setModel={setModel}
         setTrim={setTrim}
         setLicensePlate={setLicensePlate}
         setCurrentMileage={setCurrentMileage}
+        setExpectedMpg={setExpectedMpg}
         onSubmit={
           editingId
             ? updateVehicle
@@ -980,6 +988,11 @@ function App() {
 
           <FuelSection
             fuelRecords={fuelRecords}
+            expectedMpg={
+              vehicles.find(
+                (vehicle) => vehicle.id === selectedVehicleId
+              )?.expectedMpg ?? null
+            }
             fuelDate={fuelDate}
             fuelMileage={fuelMileage}
             gallons={gallons}
@@ -1015,3 +1028,4 @@ function App() {
 }
 
 export default App;
+
