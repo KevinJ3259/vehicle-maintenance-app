@@ -126,7 +126,7 @@ app.get("/api/vehicles", authenticateToken, async (req, res) => {
 });
 app.post("/api/vehicles", authenticateToken, async (req, res) => {
     try {
-        const { year, make, model, trim, vin, licensePlate, currentMileage } = req.body;
+        const { year, make, model, trim, vin, licensePlate, currentMileage, expectedMpg, } = req.body;
         const vehicle = await prisma.vehicle.create({
             data: {
                 year: Number(year),
@@ -136,6 +136,9 @@ app.post("/api/vehicles", authenticateToken, async (req, res) => {
                 vin: vin || null,
                 licensePlate: licensePlate || null,
                 currentMileage: Number(currentMileage),
+                expectedMpg: expectedMpg === "" || expectedMpg === undefined
+                    ? null
+                    : Number(expectedMpg),
                 userId: req.userId,
             },
         });
@@ -154,7 +157,7 @@ app.patch("/api/vehicles/:id", authenticateToken, async (req, res) => {
             res.status(404).json({ message: "Vehicle not found" });
             return;
         }
-        const { year, make, model, trim, vin, licensePlate, currentMileage } = req.body;
+        const { year, make, model, trim, vin, licensePlate, currentMileage, expectedMpg, } = req.body;
         const vehicle = await prisma.vehicle.update({
             where: { id },
             data: {
@@ -165,6 +168,9 @@ app.patch("/api/vehicles/:id", authenticateToken, async (req, res) => {
                 vin: vin || null,
                 licensePlate: licensePlate || null,
                 currentMileage: Number(currentMileage),
+                expectedMpg: expectedMpg === "" || expectedMpg === undefined
+                    ? null
+                    : Number(expectedMpg),
             },
         });
         res.json(vehicle);

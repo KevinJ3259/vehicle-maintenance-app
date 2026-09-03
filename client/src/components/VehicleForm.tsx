@@ -2,21 +2,20 @@ import type { FormEvent } from "react";
 
 type VehicleFormProps = {
   editingId: string | null;
-
   year: string;
   make: string;
   model: string;
   trim: string;
   licensePlate: string;
   currentMileage: string;
-
+  expectedMpg: string;
   setYear: (value: string) => void;
   setMake: (value: string) => void;
   setModel: (value: string) => void;
   setTrim: (value: string) => void;
   setLicensePlate: (value: string) => void;
   setCurrentMileage: (value: string) => void;
-
+  setExpectedMpg: (value: string) => void;
   onSubmit: (event: FormEvent) => void;
   onCancelEdit: () => void;
 };
@@ -29,12 +28,14 @@ export default function VehicleForm({
   trim,
   licensePlate,
   currentMileage,
+  expectedMpg,
   setYear,
   setMake,
   setModel,
   setTrim,
   setLicensePlate,
   setCurrentMileage,
+  setExpectedMpg,
   onSubmit,
   onCancelEdit,
 }: VehicleFormProps) {
@@ -48,33 +49,33 @@ export default function VehicleForm({
           type="number"
           placeholder="Year"
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+          onChange={(event) => setYear(event.target.value)}
         />
 
         <input
           required
           placeholder="Make"
           value={make}
-          onChange={(e) => setMake(e.target.value)}
+          onChange={(event) => setMake(event.target.value)}
         />
 
         <input
           required
           placeholder="Model"
           value={model}
-          onChange={(e) => setModel(e.target.value)}
+          onChange={(event) => setModel(event.target.value)}
         />
 
         <input
           placeholder="Trim"
           value={trim}
-          onChange={(e) => setTrim(e.target.value)}
+          onChange={(event) => setTrim(event.target.value)}
         />
 
         <input
           placeholder="License Plate"
           value={licensePlate}
-          onChange={(e) => setLicensePlate(e.target.value)}
+          onChange={(event) => setLicensePlate(event.target.value)}
         />
 
         <input
@@ -82,7 +83,16 @@ export default function VehicleForm({
           type="number"
           placeholder="Current Mileage"
           value={currentMileage}
-          onChange={(e) => setCurrentMileage(e.target.value)}
+          onChange={(event) => setCurrentMileage(event.target.value)}
+        />
+
+        <input
+          type="number"
+          min="1"
+          step="0.1"
+          placeholder="Expected MPG (example: 34)"
+          value={expectedMpg}
+          onChange={(event) => setExpectedMpg(event.target.value)}
         />
       </div>
 

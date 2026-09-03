@@ -161,8 +161,16 @@ app.get("/api/vehicles", authenticateToken, async (req: AuthRequest, res) => {
 
 app.post("/api/vehicles", authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { year, make, model, trim, vin, licensePlate, currentMileage } =
-      req.body;
+    const {
+      year,
+      make,
+      model,
+      trim,
+      vin,
+      licensePlate,
+      currentMileage,
+      expectedMpg,
+    } = req.body;
 
     const vehicle = await prisma.vehicle.create({
       data: {
@@ -173,6 +181,10 @@ app.post("/api/vehicles", authenticateToken, async (req: AuthRequest, res) => {
         vin: vin || null,
         licensePlate: licensePlate || null,
         currentMileage: Number(currentMileage),
+        expectedMpg:
+          expectedMpg === "" || expectedMpg === undefined
+            ? null
+            : Number(expectedMpg),
         userId: req.userId!,
       },
     });
@@ -197,8 +209,16 @@ app.patch(
         return;
       }
 
-      const { year, make, model, trim, vin, licensePlate, currentMileage } =
-        req.body;
+      const {
+        year,
+        make,
+        model,
+        trim,
+        vin,
+        licensePlate,
+        currentMileage,
+        expectedMpg,
+      } = req.body;
 
       const vehicle = await prisma.vehicle.update({
         where: { id },
@@ -210,6 +230,10 @@ app.patch(
           vin: vin || null,
           licensePlate: licensePlate || null,
           currentMileage: Number(currentMileage),
+          expectedMpg:
+            expectedMpg === "" || expectedMpg === undefined
+              ? null
+              : Number(expectedMpg),
         },
       });
 
@@ -615,3 +639,4 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`API running at http://localhost:${PORT}`);
 });
+

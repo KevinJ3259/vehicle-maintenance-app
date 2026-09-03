@@ -4,6 +4,7 @@ import type { FuelRecord } from "../types";
 
 type FuelSectionProps = {
   fuelRecords: FuelRecord[];
+  expectedMpg: number | null;
 
   fuelDate: string;
   fuelMileage: string;
@@ -31,6 +32,7 @@ type FuelSectionProps = {
 
 export default function FuelSection({
   fuelRecords,
+  expectedMpg,
   fuelDate,
   fuelMileage,
   gallons,
@@ -116,6 +118,90 @@ export default function FuelSection({
       ? mpgValues.reduce((sum, mpg) => sum + mpg, 0) /
         mpgValues.length
       : null;
+
+  const recordsNewestFirst = [...fuelRecords].sort(
+    (a, b) => b.mileage - a.mileage
+  );
+
+  const mpgEntries = recordsNewestFirst
+    .map((record, index) => {
+      const previousRecord = recordsNewestFirst[index + 1];
+      if (!previousRecord || record.gallons <= 0) return null;
+
+      const milesDriven = record.mileage - previousRecord.mileage;
+      if (milesDriven <= 0) return null;
+
+      return {
+        mpg: milesDriven / record.gallons,
+        milesDriven,
+        cost: record.totalCost ?? 0,
+      };
+    })
+    .filter(
+      (entry): entry is { mpg: number; milesDriven: number; cost: number } =>
+        entry !== null
+    );
+
+  const latestMpg = mpgEntries[0]?.mpg ?? null;
+  const recentMpg = mpgEntries.slice(0, 3).map((entry) => entry.mpg);
+  const recentAverageMpg =
+    recentMpg.length > 0
+      ? recentMpg.reduce((sum, value) => sum + value, 0) /
+        recentMpg.length
+      : null;
+
+  const hasDownwardTrend =
+    recentMpg.length >= 3 &&
+    recentMpg[0] < recentMpg[1] &&
+    recentMpg[1] < recentMpg[2];
+
+  const trackedMiles = mpgEntries.reduce(
+    (sum, entry) => sum + entry.milesDriven,
+    0
+  );
+  const trackedCost = mpgEntries.reduce(
+    (sum, entry) => sum + entry.cost,
+    0
+  );
+  const costPerMile = trackedMiles > 0 ? trackedCost / trackedMiles : null;
+
+  const now = new Date();
+  const monthlyFuelSpent = fuelRecords.reduce((sum, record) => {
+    const recordDate = new Date(record.date);
+    return recordDate.getMonth() === now.getMonth() &&
+      recordDate.getFullYear() === now.getFullYear()
+      ? sum + (record.totalCost ?? 0)
+      : sum;
+  }, 0);
+
+  const percentOfExpected =
+    latestMpg !== null && expectedMpg !== null && expectedMpg > 0
+      ? (latestMpg / expectedMpg) * 100
+      : null;
+
+  function getMpgInsight() {
+    if (expectedMpg === null) {
+      return "Edit this vehicle and enter its expected MPG to enable comparisons.";
+    }
+
+    if (mpgEntries.length === 0) {
+      return "Add at least two fill-ups to calculate MPG and begin trend analysis.";
+    }
+
+    if (hasDownwardTrend) {
+      return "Your MPG has declined across three fill-ups. Check tire pressure, excessive idling, rapid acceleration, the engine air filter, and overdue maintenance.";
+    }
+
+    if (recentAverageMpg !== null && recentAverageMpg < expectedMpg * 0.9) {
+      return "Your recent MPG is more than 10% below the expected value. Check tire pressure, driving habits, idling, cargo weight, and maintenance needs.";
+    }
+
+    if (latestMpg !== null && latestMpg < expectedMpg * 0.9) {
+      return "This fill-up is below the expected MPG. One tank can vary, so keep logging fuel to see whether it becomes a trend.";
+    }
+
+    return "Your fuel economy is currently close to the expected range. Continue logging each fill-up to monitor changes.";
+  }
 
   // --------------------------------
   // Search and sort fuel history
@@ -233,6 +319,46 @@ export default function FuelSection({
               : "—"}
           </h2>
         </div>
+      </div>
+
+      <div className="card" style={{ marginTop: "20px" }}>
+        <h2>🧠 MPG Intelligence</h2>
+
+        <div className="dashboard-grid">
+          <div className="dashboard-card">
+            <h3>Latest MPG</h3>
+            <h2>{latestMpg !== null ? latestMpg.toFixed(1) : "—"}</h2>
+          </div>
+
+          <div className="dashboard-card">
+            <h3>Expected MPG</h3>
+            <h2>{expectedMpg !== null ? expectedMpg.toFixed(1) : "—"}</h2>
+          </div>
+
+          <div className="dashboard-card">
+            <h3>Expected Performance</h3>
+            <h2>
+              {percentOfExpected !== null
+                ? `${percentOfExpected.toFixed(0)}%`
+                : "—"}
+            </h2>
+          </div>
+
+          <div className="dashboard-card">
+            <h3>Cost Per Mile</h3>
+            <h2>
+              {costPerMile !== null ? `$${costPerMile.toFixed(2)}` : "—"}
+            </h2>
+          </div>
+
+          <div className="dashboard-card">
+            <h3>This Month</h3>
+            <h2>${monthlyFuelSpent.toFixed(2)}</h2>
+          </div>
+        </div>
+
+        <h3>Why is my gas mileage getting worse?</h3>
+        <p>{getMpgInsight()}</p>
       </div>
 
       {/* Fuel form */}

@@ -6,6 +6,7 @@ export type Vehicle = {
   trim?: string;
   licensePlate?: string;
   currentMileage: number;
+  expectedMpg?: number | null;
 };
 
 export type MaintenanceRecord = {
